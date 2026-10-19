@@ -13,191 +13,211 @@
   <title>Kollene Aika Leyson · Architecture & Design</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="assets/serif.ttf" as="font" type="font/ttf" crossorigin>
+  <script src="assets/motion-settings.js"></script>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="assets/identity-layout.css">
+  <link rel="stylesheet" href="assets/hero-backdrop.css">
   <script src="assets/three.min.js" defer></script>
+  <script src="assets/museum-study.js" defer></script>
+  <script src="assets/portfolio-motion.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
   <div class="scroll-ruler" aria-hidden="true"><div class="scroll-ruler-fill" id="scroll-ruler-fill"></div></div>
-  <div class="arch-cursor" id="arch-cursor" aria-hidden="true">
-    <span class="arch-cursor-ring"></span>
-    <span class="arch-cursor-label" id="arch-cursor-label"></span>
-    <span class="arch-cursor-coords" id="arch-cursor-coords">000 · 000</span>
-  </div>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header wrap">
-    <a class="wordmark" href="#" aria-label="Kollene Aika Leyson, home"><span class="monogram" aria-hidden="true">ka<span>.</span></span><span>KOLLENE AIKA LEYSON<small>ARCHITECTURE & DESIGN</small></span></a>
+    <a class="wordmark" href="#home" aria-label="KL Designs · Kollene Aika Leyson, home">
+      <svg class="brand-logo" viewBox="0 0 156 170" fill="none" aria-hidden="true" focusable="false">
+        <g class="logo-line logo-house-back" stroke="#414a40" stroke-width="2.5"><path d="M23 143V56L73 29L123 56V143H48V79"/></g>
+        <g class="logo-line logo-house-front" stroke="#414a40" stroke-width="2.5"><path d="M41 84L90 57L141 85V162H41V84"/></g>
+        <g class="logo-line logo-k" stroke-width="1.5"><path d="M40 63V112M40 84L80 62M40 84L81 114" stroke="#3d6650"/><path d="M39 63V111M40 83L80 61M40 85L80 113" stroke="#d5cb77"/></g>
+        <g class="logo-line logo-l" stroke-width="1.5"><path d="M82 76V114H114" stroke="#3d6650"/><path d="M83 76V113H114" stroke="#d5cb77"/></g>
+        <g class="logo-line logo-word"><text x="81" y="136" text-anchor="middle" fill="#414a40" font-family="Arial, sans-serif" font-size="16" letter-spacing="-.4">DESIGNS</text></g>
+      </svg>
+      <span>KOLLENE AIKA LEYSON<small>ARCHITECTURE & DESIGN</small></span>
+    </a>
     <button class="menu-toggle" aria-expanded="false" aria-controls="navigation">Menu <span aria-hidden="true">+</span></button>
     <nav id="navigation" aria-label="Main navigation"><a href="#work">Selected work</a><a href="#about">About me</a><a href="#approach">My approach</a></nav>
     <a class="header-contact" data-magnetic href="#contact">Let’s connect <span aria-hidden="true">↗</span></a>
   </header>
 
   <main id="main">
-    <section class="hero wrap" aria-labelledby="hero-title">
+    <section class="hero identity-hero wrap" id="home" aria-labelledby="hero-title">
       <canvas class="hero-axon-canvas" id="hero-axon-canvas" aria-hidden="true"></canvas>
       <div class="hero-copy">
-        <p class="eyebrow"><span class="tiny-cross" aria-hidden="true">+</span> A STUDY IN PEOPLE & PLACE</p>
+        <p class="hero-role">Architecture student at Mapúa University</p>
         <h1 id="hero-title">
-          <span class="reveal-mask"><span class="reveal-line" style="--line-idx:0">Spaces with</span></span>
-          <span class="reveal-mask"><span class="reveal-line" style="--line-idx:1">purpose.</span></span>
-          <span class="reveal-mask"><span class="reveal-line" style="--line-idx:2">Places with</span></span>
-          <span class="reveal-mask"><span class="reveal-line" style="--line-idx:3"><em>feeling.</em></span></span>
+          <span class="reveal-mask"><span class="reveal-line" style="--line-idx:0">Kollene Aika</span></span>
+          <span class="reveal-mask"><span class="reveal-line" style="--line-idx:1"><em>Leyson.</em></span></span>
         </h1>
-        <p class="hero-intro">I’m Kollene Aika, an architecture student exploring how thoughtful design can make everyday life more meaningful.</p>
-        <div class="hero-actions"><a class="button" data-magnetic href="#work">Explore my work <span aria-hidden="true">↓</span></a><a class="text-link" href="#about">A little about me <span aria-hidden="true">↗</span></a></div>
-        <div class="hero-note"><span class="reg-mark" aria-hidden="true">⌖</span> BS ARCHITECTURE · MAPÚA UNIVERSITY</div>
+        <p class="hero-intro">I explore thoughtful spaces through plans, visual studies and hands-on models.</p>
+        <ul class="hero-skills" aria-label="Portfolio capabilities"><li>Architectural planning</li><li>Visualization</li><li>Model making</li></ul>
+        <div class="hero-actions"><a class="button" data-magnetic href="#work">Explore my work <span aria-hidden="true">↓</span></a><a class="text-link" href="#contact">Let’s connect <span aria-hidden="true">↗</span></a></div>
       </div>
-      <figure class="hero-figure">
-        <div class="hero-image-wrap" id="hero-stage" data-cursor="SUN STUDY">
-          <img class="hero-image" id="hero-source-image" src="assets/manor.webp" alt="Siete Lagos Manor academic proposal: a boutique hotel with classical arches and layered balconies in warm evening light" fetchpriority="high" width="1400" height="1500">
-          <canvas class="heliodon-canvas" id="hero-heliodon" aria-hidden="true"></canvas>
-          <span class="image-index">FEATURED STUDY <span id="hero-study-meta">01 / 06 · HELIODON ACTIVE</span></span>
-          <span class="image-corner" aria-hidden="true">+</span>
-        </div>
-        <div class="heliodon-bar" role="group" aria-label="Interactive architectural daylight study">
-          <div class="heliodon-readout">
-            <span class="heliodon-tag">SOLAR AZIMUTH</span>
-            <span class="heliodon-time" id="heliodon-time">16:45 · GOLDEN HOUR</span>
+      <figure class="hero-portrait portrait-composition">
+        <div class="manor-backdrop-stack" aria-hidden="true">
+          <div class="manor-backdrop-sheet"></div>
+          <div class="hero-image-wrap manor-backdrop" id="hero-stage">
+            <img class="hero-image" id="hero-source-image" src="assets/manor.webp?v=restored" alt="" width="1024" height="765" fetchpriority="high">
+            <canvas class="heliodon-canvas" id="hero-heliodon"></canvas>
           </div>
-          <input type="range" id="sun-slider" class="sun-slider" min="0" max="100" value="72" aria-label="Adjust solar angle across Siete Lagos Manor">
-          <button type="button" class="heliodon-mode" id="heliodon-mode" aria-pressed="false">Elevation lines</button>
         </div>
-        <figcaption><div><span class="eyebrow">HOSPITALITY / SAN PABLO, LAGUNA</span><strong>Siete Lagos Manor</strong></div><button class="circle-button" data-magnetic data-project="manor" aria-label="Explore Siete Lagos Manor">↗</button></figcaption>
+        <button type="button" class="portrait-toggle" id="portrait-toggle" aria-pressed="false" aria-label="Show hard-hat portrait and midday light">
+          <span class="portrait-image-stack">
+            <img class="portrait-normal" id="portrait-normal" src="assets/portrait.webp" alt="Kollene Aika Leyson" width="897" height="1123" fetchpriority="high">
+            <img class="portrait-hardhat" id="portrait-hardhat" src="assets/portrait-hardhat.webp" alt="" width="1121" height="1403" aria-hidden="true">
+          </span>
+        </button>
+        <span class="sr-only" id="heliodon-time">15:00 · GOLDEN HOUR</span>
+        <span class="sr-only" id="hero-study-meta">Siete Lagos Manor daylight backdrop</span>
       </figure>
-      <span class="hero-side-note" aria-hidden="true">SELECTED ACADEMIC WORKS · 2023 TO PRESENT</span>
     </section>
 
-    <div class="intro-strip wrap" data-draw-line><span>DESIGNING WITH INTENTION.</span><p>Rooted in context. Shaped around people.</p><a href="#work" aria-label="Scroll to selected work">SCROLL TO EXPLORE <span aria-hidden="true">↓</span></a></div>
+    <div class="intro-strip wrap" data-draw-line><span>ACADEMIC PORTFOLIO</span><p>12 studies. 6 models. 20 boards.</p><a href="#work">EXPLORE THE WORK <span aria-hidden="true">↓</span></a></div>
 
     <section class="work section wrap" id="work" aria-labelledby="work-title">
-      <div class="section-top" data-draw-line><p class="eyebrow"><span class="section-number">01</span> SELECTED EXPLORATIONS</p><span class="small-note">ACADEMIC DESIGN PORTFOLIO</span></div>
-      <div class="section-heading" data-reveal><h2 id="work-title">Different scales.<br>A shared <em>purpose.</em></h2><p>From the intimacy of a home to the life of a city, each study explores a different way to connect people and place.</p></div>
+      <div class="section-top" data-draw-line><p class="eyebrow"><span class="section-number">01</span> SELECTED WORK</p></div>
+      <div class="section-heading" data-reveal><h2 id="work-title">Spaces with<br><em>purpose.</em></h2><p>Academic proposals across homes, hospitality and public spaces.</p></div>
       <div class="filter-bar" role="group" aria-label="Filter projects"><button class="filter active" data-filter="all" aria-pressed="true">All work <sup>06</sup></button><button class="filter" data-filter="residential" aria-pressed="false">Residential</button><button class="filter" data-filter="hospitality" aria-pressed="false">Hospitality</button><button class="filter" data-filter="mixed-use" aria-pressed="false">Mixed-use</button><button class="filter" data-filter="public" aria-pressed="false">Public & civic</button><button class="filter" data-filter="transportation" aria-pressed="false">Transportation</button></div>
       <p class="sr-only" id="filter-status" role="status" aria-live="polite"></p>
       <div class="project-grid" id="project-grid">
-        <article class="project-card" data-category="residential" data-card-key="casa" style="--card-idx:0"><button class="project-image" data-project="casa" data-cursor="VIEW STUDY" aria-label="View Casa Adinerado design study"><img src="assets/casa.webp" alt="Casa Adinerado, a contemporary two-storey home with a red tiled roof, open balconies, and landscaped frontage" width="1200" height="850" loading="lazy"><span class="project-label">01 / RESIDENTIAL</span><span class="project-hover" aria-hidden="true">Explore study ↗</span></button><div class="project-info"><div><h3><button data-project="casa">Casa Adinerado</button></h3><p>A contemporary sanctuary for everyday family life.</p></div><span class="project-location">URDANETA CITY<br>PANGASINAN</span></div></article>
-        <article class="project-card" data-category="hospitality" data-card-key="manor" style="--card-idx:1"><button class="project-image" data-project="manor" data-cursor="VIEW STUDY" aria-label="View Siete Lagos Manor design study"><img src="assets/manor.webp" alt="Siete Lagos Manor boutique hotel proposal at sunset, featuring a grand entrance arch and classical balconies" width="1200" height="850" loading="lazy"><span class="project-label">02 / HOSPITALITY</span><span class="project-hover" aria-hidden="true">Explore study ↗</span></button><div class="project-info"><div><h3><button data-project="manor">Siete Lagos Manor</button></h3><p>Classical elegance, through a local lens.</p></div><span class="project-location">SAN PABLO<br>LAGUNA</span></div></article>
-        <article class="project-card" data-category="mixed-use" data-card-key="sunbeam" style="--card-idx:2"><button class="project-image sunbeam-image" data-project="sunbeam" data-cursor="VIEW STUDY" aria-label="View The Sunbeam Gallery design study"><img src="assets/sunbeam.webp" alt="The Sunbeam Gallery shophouse facade with tall arched openings and warm natural materials" width="1200" height="850" loading="lazy"><span class="project-label">03 / MIXED-USE</span><span class="project-hover" aria-hidden="true">Explore study ↗</span></button><div class="project-info"><div><h3><button data-project="sunbeam">The Sunbeam Gallery</button></h3><p>A conversation between heritage and contemporary life.</p></div><span class="project-location">BINONDO<br>MANILA</span></div></article>
-        <article class="project-card" data-category="public" data-card-key="sanyata" style="--card-idx:3"><button class="project-image" data-project="sanyata" data-cursor="VIEW STUDY" aria-label="View Sanyata design study"><img src="assets/sanyata.webp" alt="Aerial visualization of Sanyata health and wellness center, integrated with green landscapes" width="1200" height="850" loading="lazy"><span class="project-label">04 / HEALTH & WELLNESS</span><span class="project-hover" aria-hidden="true">Explore study ↗</span></button><div class="project-info"><div><h3><button data-project="sanyata">Sanyata</button></h3><p>Wellness with a sense of belonging.</p></div><span class="project-location">BALER<br>AURORA</span></div></article>
-        <article class="project-card" data-category="public" data-card-key="cityhall" style="--card-idx:4"><button class="project-image" data-project="cityhall" data-cursor="VIEW STUDY" aria-label="View New Manila City Hall design study"><img src="assets/cityhall.webp" alt="Aerial rendering of the proposed New Manila City Hall showing connected volumes and planted grounds" width="1200" height="850" loading="lazy"><span class="project-label">05 / CIVIC</span><span class="project-hover" aria-hidden="true">Explore study ↗</span></button><div class="project-info"><div><h3><button data-project="cityhall">New Manila City Hall</button></h3><p>Connected spaces for a connected community.</p></div><span class="project-location">ERMITA<br>MANILA</span></div></article>
-        <article class="project-card" data-category="transportation" data-card-key="airport" style="--card-idx:5"><button class="project-image" data-project="airport" data-cursor="VIEW STUDY" aria-label="View Amianan airport design study"><img src="assets/airport.webp" alt="Amianan airport terminal proposal with a sweeping wing-inspired roof and landscaped approach" width="1200" height="850" loading="lazy"><span class="project-label">06 / TRANSPORTATION</span><span class="project-hover" aria-hidden="true">Explore study ↗</span></button><div class="project-info"><div><h3><button data-project="airport">Amianan</button></h3><p>A regional gateway, grounded in local identity.</p></div><span class="project-location">BINALONAN<br>PANGASINAN</span></div></article>
+        <article class="project-card" data-category="residential" data-card-key="casa" style="--card-idx:0"><button class="project-image" data-project="casa" aria-label="View Casa Adinerado design study"><img src="assets/casa.webp" alt="Casa Adinerado, a contemporary two-storey home with a red tiled roof, open balconies, and landscaped frontage" width="1200" height="850" loading="lazy"><span class="project-label">01 / RESIDENTIAL</span><span class="project-hover" aria-hidden="true">Explore study ↗</span></button><div class="project-info"><div><h3><button data-project="casa">Casa Adinerado</button></h3><p>A contemporary sanctuary for everyday family life.</p></div><span class="project-location">URDANETA CITY<br>PANGASINAN</span></div></article>
+        <article class="project-card" data-category="hospitality" data-card-key="manor" style="--card-idx:1"><button class="project-image" data-project="manor" aria-label="View Siete Lagos Manor design study"><img src="assets/manor.webp?v=restored" alt="Siete Lagos Manor boutique hotel proposal with classical arches, balconies and a roof deck at sunset" width="1024" height="765" loading="lazy"><span class="project-label">02 / HOSPITALITY</span><span class="project-hover" aria-hidden="true">Explore study ↗</span></button><div class="project-info"><div><h3><button data-project="manor">Siete Lagos Manor</button></h3><p>Classical elegance, through a local lens.</p></div><span class="project-location">SAN PABLO<br>LAGUNA</span></div></article>
+        <article class="project-card" data-category="mixed-use" data-card-key="sunbeam" style="--card-idx:2"><button class="project-image sunbeam-image" data-project="sunbeam" aria-label="View The Sunbeam Gallery design study"><img src="assets/sunbeam.webp" alt="The Sunbeam Gallery shophouse facade with tall arched openings and warm natural materials" width="1200" height="850" loading="lazy"><span class="project-label">03 / MIXED-USE</span><span class="project-hover" aria-hidden="true">Explore study ↗</span></button><div class="project-info"><div><h3><button data-project="sunbeam">The Sunbeam Gallery</button></h3><p>A conversation between heritage and contemporary life.</p></div><span class="project-location">BINONDO<br>MANILA</span></div></article>
+        <article class="project-card" data-category="public" data-card-key="sanyata" style="--card-idx:3"><button class="project-image" data-project="sanyata" aria-label="View Sanyata design study"><img src="assets/sanyata.webp" alt="Aerial visualization of Sanyata health and wellness center, integrated with green landscapes" width="1200" height="850" loading="lazy"><span class="project-label">04 / HEALTH & WELLNESS</span><span class="project-hover" aria-hidden="true">Explore study ↗</span></button><div class="project-info"><div><h3><button data-project="sanyata">Sanyata</button></h3><p>Wellness with a sense of belonging.</p></div><span class="project-location">BALER<br>AURORA</span></div></article>
+        <article class="project-card" data-category="public" data-card-key="cityhall" style="--card-idx:4"><button class="project-image" data-project="cityhall" aria-label="View New Manila City Hall design study"><img src="assets/cityhall.webp" alt="Aerial rendering of the proposed New Manila City Hall showing connected volumes and planted grounds" width="1200" height="850" loading="lazy"><span class="project-label">05 / CIVIC</span><span class="project-hover" aria-hidden="true">Explore study ↗</span></button><div class="project-info"><div><h3><button data-project="cityhall">New Manila City Hall</button></h3><p>Connected spaces for a connected community.</p></div><span class="project-location">ERMITA<br>MANILA</span></div></article>
+        <article class="project-card" data-category="transportation" data-card-key="airport" style="--card-idx:5"><button class="project-image" data-project="airport" aria-label="View Amianan airport design study"><img src="assets/airport.webp" alt="Amianan airport terminal proposal with a sweeping wing-inspired roof and landscaped approach" width="1200" height="850" loading="lazy"><span class="project-label">06 / TRANSPORTATION</span><span class="project-hover" aria-hidden="true">Explore study ↗</span></button><div class="project-info"><div><h3><button data-project="airport">Amianan</button></h3><p>A regional gateway, grounded in local identity.</p></div><span class="project-location">BINALONAN<br>PANGASINAN</span></div></article>
       </div>
       <div class="archive-section" id="archive-section" data-reveal>
         <div class="archive-header" data-draw-line>
           <div>
-            <p class="eyebrow">ADDITIONAL ARCHITECTURAL STUDIES · BOARDS 05 TO 14</p>
-            <h3>Six further design explorations.</h3>
+            <p class="eyebrow">FROM THE PORTFOLIO</p>
+            <h3>Six more studies.</h3>
           </div>
-          <p class="archive-sub">Documented residential, commercial, hospitality, institutional, and recreational proposals from the 20-page portfolio.</p>
+          <p class="archive-sub">Further proposals from the original 20-board portfolio.</p>
         </div>
         <div class="archive-grid" id="archive-grid">
           <article class="archive-card" data-category="residential" data-card-key="bungalow">
-            <button type="button" class="archive-thumb" data-board="5" data-cursor="BOARD 05" aria-label="Open Board 5: A Proposed Bungalow House">
+            <button type="button" class="archive-thumb" data-board="5" aria-label="Open Board 5: A Proposed Bungalow House">
               <img src="assets/boards/page-05.webp" alt="Board 5: A Proposed Bungalow House exterior and floor plan" width="640" height="453" loading="lazy">
               <span class="archive-board-tag">BOARD 05 · RESIDENTIAL</span>
             </button>
             <div class="archive-body">
               <div class="archive-title-row"><h4>A Proposed Bungalow House</h4><span>19 Garnet St., St. Medalya Hills, Urdaneta City</span></div>
-              <p>Single-storey residential study presenting an exterior visualization and ground floor plan layout.</p>
+              <p>A single-storey home, shown through its exterior and floor plan.</p>
               <div class="archive-meta"><span>Academic design study</span><button type="button" class="text-link archive-open" data-board="5">View board 05 <span aria-hidden="true">↗</span></button></div>
             </div>
           </article>
           <article class="archive-card" data-category="residential" data-card-key="barnhouse">
-            <button type="button" class="archive-thumb" data-board="7" data-cursor="BOARD 07" aria-label="Open Board 7: Barn House">
+            <button type="button" class="archive-thumb" data-board="7" aria-label="Open Board 7: Barn House">
               <img src="assets/boards/page-07.webp" alt="Board 7: Barn House residential study in Roquebrune-Cap-Martin, France" width="640" height="453" loading="lazy">
               <span class="archive-board-tag">BOARD 07 · RESIDENTIAL</span>
             </button>
             <div class="archive-body">
               <div class="archive-title-row"><h4>Barn House</h4><span>Roquebrune-Cap-Martin, France</span></div>
-              <p>Residential architectural visualization study exploring pitched roof massing, stone-and-timber materiality, and site context.</p>
+              <p>A residential study with pitched roofs, stone and timber.</p>
               <div class="archive-meta"><span>Academic design study</span><button type="button" class="text-link archive-open" data-board="7">View board 07 <span aria-hidden="true">↗</span></button></div>
             </div>
           </article>
           <article class="archive-card" data-category="mixed-use" data-card-key="boscoffee">
-            <button type="button" class="archive-thumb" data-board="8" data-cursor="BOARD 08" aria-label="Open Board 8: Bo’s Coffee academic commercial study">
+            <button type="button" class="archive-thumb" data-board="8" aria-label="Open Board 8: Bo’s Coffee academic commercial study">
               <img src="assets/boards/page-08.webp" alt="Board 8: Bo's Coffee academic commercial study showing ground floor plan and exterior" width="640" height="453" loading="lazy">
               <span class="archive-board-tag">BOARD 08 · COMMERCIAL STUDY</span>
             </button>
             <div class="archive-body">
               <div class="archive-title-row"><h4>Bo’s Coffee (Academic Study)</h4><span>Bypass Road, Urdaneta City, Pangasinan</span></div>
-              <p>Academic commercial design study presenting a ground floor plan and exterior perspective along Bypass Road.</p>
+              <p>A café proposal explored through a floor plan and exterior view.</p>
               <div class="archive-meta"><span>Academic design study (non-commercial)</span><button type="button" class="text-link archive-open" data-board="8">View board 08 <span aria-hidden="true">↗</span></button></div>
             </div>
           </article>
           <article class="archive-card" data-category="hospitality" data-card-key="azamara">
-            <button type="button" class="archive-thumb" data-board="10" data-cursor="BOARD 10" aria-label="Open Board 10: Azamara luxury hotel and retail center">
+            <button type="button" class="archive-thumb" data-board="10" aria-label="Open Board 10: Azamara luxury hotel and retail center">
               <img src="assets/boards/page-10.webp" alt="Board 10: Azamara proposed luxury hotel and retail center in Pasay City" width="640" height="453" loading="lazy">
               <span class="archive-board-tag">BOARD 10 · HOSPITALITY &amp; RETAIL</span>
             </button>
             <div class="archive-body">
               <div class="archive-title-row"><h4>Azamara</h4><span>Seaside Boulevard, Pasay City</span></div>
-              <p>Proposed luxury hotel and retail center combining hospitality and commercial spaces with contemporary coastal massing.</p>
+              <p>A proposed hotel and retail center with contemporary coastal forms.</p>
               <div class="archive-meta"><span>Group collaboration: Pauline Claire A. Alaban, Ma. Jeremy Grace C. Gumatay, Alexa Caira S. Santos &amp; Michaella Concepcion A. Tugano</span><button type="button" class="text-link archive-open" data-board="10">View board 10 <span aria-hidden="true">↗</span></button></div>
             </div>
           </article>
           <article class="archive-card" data-category="public" data-card-key="sorelle">
-            <button type="button" class="archive-thumb" data-board="13" data-cursor="BOARD 13" aria-label="Open Board 13: Sorelle proposed women's correctional institution">
+            <button type="button" class="archive-thumb" data-board="13" aria-label="Open Board 13: Sorelle proposed women's correctional institution">
               <img src="assets/boards/page-13.webp" alt="Board 13: Sorelle proposed women's correctional institution campus layout in Mabalacat, Pampanga" width="640" height="453" loading="lazy">
               <span class="archive-board-tag">BOARD 13 · INSTITUTIONAL</span>
             </button>
             <div class="archive-body">
               <div class="archive-title-row"><h4>Sorelle</h4><span>Tabun, Mabalacat, Pampanga · 71 m × 142 m site</span></div>
-              <p>Proposed women’s correctional institution organized around a courtyard campus system prioritizing humane rehabilitation, education, gardens, and natural ventilation.</p>
+              <p>A correctional institution proposal exploring rehabilitation, education and courtyard gardens.</p>
               <div class="archive-meta"><span>Group collaboration: Pauline Claire A. Alaban &amp; Michaella Concepcion A. Tugano</span><button type="button" class="text-link archive-open" data-board="13">View board 13 <span aria-hidden="true">↗</span></button></div>
             </div>
           </article>
           <article class="archive-card" data-category="public" data-card-key="siglang">
-            <button type="button" class="archive-thumb" data-board="14" data-cursor="BOARD 14" aria-label="Open Board 14: Siglang Kampeon proposed community sports complex">
+            <button type="button" class="archive-thumb" data-board="14" aria-label="Open Board 14: Siglang Kampeon proposed community sports complex">
               <img src="assets/boards/page-14.webp" alt="Board 14: Siglang Kampeon proposed community sports complex in Angeles, Pampanga" width="640" height="453" loading="lazy">
               <span class="archive-board-tag">BOARD 14 · PUBLIC ASSEMBLY</span>
             </button>
             <div class="archive-body">
               <div class="archive-title-row"><h4>Siglang Kampeon</h4><span>Angeles, Pampanga</span></div>
-              <p>Proposed climate-responsive community sports complex exploring inclusive spatial sequencing, tropical passive cooling, and large-span public assembly.</p>
+              <p>A community sports complex proposal exploring inclusive spaces and tropical cooling.</p>
               <div class="archive-meta"><span>Academic design study</span><button type="button" class="text-link archive-open" data-board="14">View board 14 <span aria-hidden="true">↗</span></button></div>
             </div>
           </article>
         </div>
       </div>
 
-      <div class="archive-cta" data-draw-line><p>There’s more to the story.<span>12 architectural studies, 6 scale models, and manual plates across 20 boards.</span></p><div class="archive-cta-actions"><button class="button button-outline" data-magnetic data-board="1">Browse all 20 boards <span aria-hidden="true">↗</span></button><a class="button button-outline" data-magnetic href="assets/boards/page-03.webp" target="_blank" rel="noopener">Table of contents (p.03) <span aria-hidden="true">↗</span></a></div></div>
+      <div class="archive-cta" data-draw-line><p>The complete portfolio.<span>12 architectural studies, 6 scale models and manual plates across 20 boards.</span></p><div class="archive-cta-actions"><button class="button button-outline" data-magnetic data-board="1">Browse all 20 boards <span aria-hidden="true">↗</span></button><a class="button button-outline" data-magnetic href="assets/boards/page-03.webp" target="_blank" rel="noopener">Table of contents (p.03) <span aria-hidden="true">↗</span></a></div></div>
     </section>
 
-    <section class="about" id="about" aria-labelledby="about-title"><div class="wrap about-grid"><div class="about-visual" data-reveal><div class="portrait-frame" data-parallax-frame><svg class="portrait-arch-svg" viewBox="0 0 280 340" fill="none" aria-hidden="true"><path class="arch-path" d="M 42 325 L 42 155 A 98 98 0 0 1 238 155 L 238 325 Z"/></svg><img src="assets/portrait.webp" alt="Kollene Aika Leyson" width="800" height="1000" loading="lazy"><span class="portrait-mark" aria-hidden="true">ka.</span></div><p class="portrait-caption"><span>THE PERSON BEHIND THE PLANS</span><span>↗</span></p></div><div class="about-copy" data-reveal><p class="eyebrow"><span class="section-number">02</span> A LITTLE ABOUT ME</p><h2 id="about-title">Curious by nature.<br><em>Intentional</em> by design.</h2><p class="about-lead">Hi, I’m Kollene. I believe architecture begins with understanding how people live.</p><p>I’m a fourth-year Bachelor of Science in Architecture student at Mapúa University. My academic journey explores residential, commercial, hospitality, mixed-use, civic, healthcare, recreational, and transportation spaces through plans, visualizations, and hands-on making.</p><p>I’m drawn to design that brings functionality, aesthetics, and sustainability together. For me, a meaningful space responds to its surroundings and makes room for the people who use it.</p><a class="text-link" href="#contact">Let’s start a conversation <span aria-hidden="true">↗</span></a><div class="education" data-draw-line><p class="eyebrow">A FOUNDATION IN LEARNING</p><div><span>2023 TO PRESENT</span><p><strong>Mapúa University</strong><small>Bachelor of Science in Architecture</small></p></div><div><span>2021 TO 2023</span><p><strong>International Colleges for Excellence, Inc.</strong><small>Senior High School · STEM</small></p></div><div><span>2017 TO 2021</span><p><strong>International Colleges for Excellence, Inc.</strong><small>Junior High School</small></p></div><div><span>2011 TO 2017</span><p><strong>International Colleges for Excellence, Inc.</strong><small>Primary Education</small></p></div></div></div></div></section>
+    <section class="about" id="about" aria-labelledby="about-title">
+      <div class="wrap about-grid">
+        <div class="about-visual" data-reveal><div class="portrait-frame" data-parallax-frame><img src="assets/portrait.webp" alt="Kollene Aika Leyson" width="897" height="1123" loading="lazy"></div></div>
+        <div class="about-copy" data-reveal>
+          <p class="eyebrow"><span class="section-number">02</span> ABOUT ME</p>
+          <h2 id="about-title">A little<br><em>about me.</em></h2>
+          <p class="about-lead">I’m a fourth-year architecture student at Mapúa University. My work explores how planning, material and form can balance function, aesthetics and sustainability, with people’s everyday needs at the center of each proposal.</p>
+          <a class="text-link" href="#contact">Say hello <span aria-hidden="true">↗</span></a>
+          <div class="education" data-draw-line>
+            <p class="eyebrow">EDUCATION</p>
+            <div><span>2023 TO PRESENT</span><p><strong>Mapúa University</strong><small>Bachelor of Science in Architecture</small></p></div>
+            <div><span>2021 TO 2023</span><p><strong>International Colleges for Excellence, Inc.</strong><small>Senior High School · STEM</small></p></div>
+            <div><span>2017 TO 2021</span><p><strong>International Colleges for Excellence, Inc.</strong><small>Junior High School</small></p></div>
+            <div><span>2011 TO 2017</span><p><strong>International Colleges for Excellence, Inc.</strong><small>Primary Education</small></p></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section class="approach section wrap" id="approach" aria-labelledby="approach-title">
-      <div class="section-top" data-draw-line><p class="eyebrow"><span class="section-number">03</span> THOUGHT, THEN FORM</p><span class="small-note">THE PROCESS IS PART OF THE WORK</span></div>
-      <div class="section-heading" data-reveal><h2 id="approach-title">From a question<br>to a <em>possibility.</em></h2><p>A practice of looking closely, testing ideas, and turning concepts into spaces that feel considered.</p></div>
+      <div class="section-top" data-draw-line><p class="eyebrow"><span class="section-number">03</span> CAPABILITIES</p></div>
+      <div class="section-heading" data-reveal><h2 id="approach-title">Ideas into<br><em>form.</em></h2><p>Planning, visualization and hands-on making.</p></div>
       <div class="process-grid" data-draw-line>
         <article>
-          <span class="process-index">01 / UNDERSTAND</span>
+          <span class="process-index">01</span>
           <div class="process-icon" aria-hidden="true"><canvas class="process-canvas" data-process-model="site" width="120" height="120"></canvas><span class="process-glyph-fallback">◎</span></div>
-          <h3>Start with people.</h3>
-          <p>Consider the users, the setting, and the everyday experiences a space needs to support.</p>
-          <div class="capabilities">Architectural planning · Site design · Spatial exploration</div>
+          <h3>Planning.</h3>
+          <p>Plan spaces around people, context and circulation.</p>
         </article>
         <article>
-          <span class="process-index">02 / EXPLORE</span>
+          <span class="process-index">02</span>
           <div class="process-icon planes" aria-hidden="true"><canvas class="process-canvas" data-process-model="form" width="120" height="120"></canvas><span class="process-glyph-fallback">◇</span></div>
-          <h3>Make room for ideas.</h3>
-          <p>Explore form, light, material, and movement through drawings, scale models, and structural studies.</p>
-          <div class="capabilities">Concept development · Scale model making · Structural exploration</div>
+          <h3>Model making.</h3>
+          <p>Test proportion, geometry and structure through physical models.</p>
         </article>
         <article>
-          <span class="process-index">03 / COMMUNICATE</span>
+          <span class="process-index">03</span>
           <div class="process-icon" aria-hidden="true"><canvas class="process-canvas" data-process-model="elevation" width="120" height="120"></canvas><span class="process-glyph-fallback">⌑</span></div>
-          <h3>Bring the vision closer.</h3>
-          <p>Translate design thinking into plans, exterior visualizations, and hand-rendered architectural plates.</p>
-          <div class="capabilities">Exterior visualization · Manual drafting &amp; rendering · Visual communication</div>
+          <h3>Visualization.</h3>
+          <p>Communicate ideas through renders, drawings and manual plates.</p>
         </article>
       </div>
 
       <div class="making-heading" data-reveal>
         <div>
-          <p class="eyebrow">INTERACTIVE 3D SCALE MODEL WORKBENCH · BOARD 17</p>
-          <h3>Thinking through making.</h3>
+          <p class="eyebrow">BOARD 17</p>
+          <h3>Scale model studies.</h3>
         </div>
-        <p>Explore all 6 physical scale model studies documented on Board 17 of Kollene’s portfolio.</p>
+        <p>Explore all 6 physical studies from the portfolio.</p>
       </div>
 
       <div class="studio-workbench" id="studio-workbench" aria-label="Interactive 3D structural studies workbench">
@@ -239,35 +259,71 @@
             <div><span>BOARD 17 STUDY</span><strong id="wb-material">Tensegrity scale model exploring tension, compression &amp; structural balance</strong></div>
           </div>
         </div>
-        <div class="workbench-stage" id="workbench-stage" data-cursor="DRAG TO ORBIT 3D">
-          <canvas id="structural-3d-canvas" aria-label="Interactive 3D architectural model viewer"></canvas>
+        <div class="workbench-stage" id="workbench-stage">
           <div class="workbench-hud-top">
             <span class="wb-badge" id="wb-badge">MODEL 01 · TENSEGRITY (BOARD 17)</span>
-            <div class="wb-cam-group" role="group" aria-label="Camera projection">
-              <button type="button" class="wb-cam-btn active" data-cam-view="axon" aria-pressed="true">Axon 3D</button>
-              <button type="button" class="wb-cam-btn" data-cam-view="plan" aria-pressed="false">Plan</button>
-              <button type="button" class="wb-cam-btn" data-cam-view="elevation" aria-pressed="false">Elevation</button>
+            <div class="wb-view-controls">
+              <div class="wb-cam-group" role="group" aria-label="Camera projection">
+                <button type="button" class="wb-cam-btn active" data-cam-view="axon" aria-pressed="true">Axon 3D</button>
+                <button type="button" class="wb-cam-btn" data-cam-view="plan" aria-pressed="false">Plan</button>
+                <button type="button" class="wb-cam-btn" data-cam-view="elevation" aria-pressed="false">Elevation</button>
+              </div>
+              <button type="button" class="wb-cam-btn" id="wb-source-toggle" aria-expanded="false" aria-controls="wb-source-panel">Source</button>
             </div>
           </div>
-          <div class="workbench-hud-bottom">
-            <span class="wb-hint">Drag to orbit · Scroll or buttons to inspect</span>
-            <div class="wb-actions">
-              <button type="button" class="wb-toggle-btn" id="wb-vectors-toggle" aria-pressed="true">Force vectors: On</button>
-              <button type="button" class="wb-board-link" data-board="17">Open Scale Models Board (p.17) ↗</button>
+          <div class="workbench-comparison" id="workbench-comparison">
+            <div class="wb-model-view">
+              <span class="wb-comparison-label">3D interpretation</span>
+              <canvas id="structural-3d-canvas" tabindex="0" aria-label="Interactive 3D architectural model viewer. Arrow keys orbit, plus and minus zoom, and Home resets the view." aria-describedby="wb-interaction-help"></canvas>
             </div>
+            <figure class="wb-source-panel" id="wb-source-panel" hidden>
+              <div class="wb-source-image-wrap"><img id="wb-source-image" alt="" decoding="async"></div>
+              <figcaption aria-live="polite"><strong id="wb-source-title"></strong><span>Original portfolio photograph · Board 17</span></figcaption>
+            </figure>
+          </div>
+          <div class="workbench-hud-bottom">
+            <p class="sr-only" id="wb-interaction-help">Drag or use arrow keys to orbit. Plus and minus zoom. Home resets the view.</p>
+            <div class="wb-zoom-group" role="group" aria-label="Zoom and reset the model">
+              <button type="button" class="wb-toggle-btn" id="wb-zoom-out" aria-label="Zoom model out">−</button>
+              <button type="button" class="wb-toggle-btn" id="wb-zoom-in" aria-label="Zoom model in">+</button>
+              <button type="button" class="wb-toggle-btn" id="wb-reset">Reset</button>
+            </div>
+            <details class="wb-model-controls">
+              <summary>Model controls</summary>
+              <div class="wb-secondary-controls">
+                <div class="wb-orbit-group" role="group" aria-label="Orbit the model">
+                  <button type="button" class="wb-toggle-btn" id="wb-orbit-left" aria-label="Orbit model left">←</button>
+                  <button type="button" class="wb-toggle-btn" id="wb-orbit-right" aria-label="Orbit model right">→</button>
+                  <button type="button" class="wb-toggle-btn" id="wb-orbit-up" aria-label="Orbit model up">↑</button>
+                  <button type="button" class="wb-toggle-btn" id="wb-orbit-down" aria-label="Orbit model down">↓</button>
+                </div>
+                <button type="button" class="wb-toggle-btn" id="wb-vectors-toggle" aria-pressed="false">Labels: Off</button>
+                <button type="button" class="wb-board-link" data-board="17">View source board ↗</button>
+                <p class="wb-keyboard-help">Drag or use arrow keys to orbit · + / − to zoom · Home resets</p>
+              </div>
+            </details>
           </div>
         </div>
       </div>
 
+      <p class="museum-interpretation-note" id="museum-interpretation-note" hidden>Illustrative reconstruction from portfolio photographs. The visible roof, entrance and curved wings guide this interpretation; dimensions and unseen geometry remain approximate.</p>
+      <details class="museum-source-reference" id="museum-source-reference" hidden>
+        <summary>View original museum photographs · Board 17</summary>
+        <div class="museum-reference-grid">
+          <figure><img src="assets/museum-oblique.webp" alt="Original Interconnected Museum scale model photograph showing segmented radial roof forms, curved side extensions and a landscaped base" width="615" height="447" loading="lazy"><figcaption>Oblique view · Original portfolio photograph, Board 17.</figcaption></figure>
+          <figure><img src="assets/museum-front.webp" alt="Original Interconnected Museum scale model viewed from the front and above, showing roof segments, entrance stairs and two curved side extensions" width="615" height="461" loading="lazy"><figcaption>Frontal and overhead view · Original portfolio photograph, Board 17.</figcaption></figure>
+        </div>
+      </details>
+
       <div class="making-grid">
-        <button class="making-card" data-board="17" data-cursor="OPEN BOARD 17"><img src="assets/models.webp" alt="Board 17 scale models: Kinkakuji / The Golden Pavilion, Interconnected Museum, Thin Shell Structure, Tensegrity, Bamboo Stick Bridge, and Paper Folding" width="1000" height="650" loading="lazy"><span><strong>Form, in three dimensions.</strong><small>SCALE MODELS · KINKAKUJI, INTERCONNECTED MUSEUM, THIN SHELL, TENSEGRITY, BAMBOO STICK BRIDGE &amp; PAPER FOLDING</small><i aria-hidden="true">↗</i></span></button>
-        <button class="making-card" data-board="19" data-cursor="OPEN BOARD 19"><img src="assets/manual.webp" alt="Boards 18 and 19 manual plates: pencil and pen-and-ink drawings exploring shading, line, texture, and depth" width="1000" height="650" loading="lazy"><span><strong>The mark of a human hand.</strong><small>MANUAL PLATES · PENCIL, PEN &amp; INK VISUAL COMMUNICATIONS (BOARDS 18–19)</small><i aria-hidden="true">↗</i></span></button>
+        <button class="making-card" data-board="17"><img src="assets/models.webp" alt="Board 17 scale models: Kinkakuji / The Golden Pavilion, Interconnected Museum, Thin Shell Structure, Tensegrity, Bamboo Stick Bridge, and Paper Folding" width="1000" height="650" loading="lazy"><span><strong>Physical models.</strong><small>6 SCALE STUDIES · BOARD 17</small><i aria-hidden="true">↗</i></span></button>
+        <button class="making-card" data-board="19"><img src="assets/manual.webp" alt="Boards 18 and 19 manual plates: pencil and pen-and-ink drawings exploring shading, line, texture, and depth" width="1000" height="650" loading="lazy"><span><strong>Drawn by hand.</strong><small>PENCIL, PEN &amp; INK · BOARDS 18–19</small><i aria-hidden="true">↗</i></span></button>
       </div>
     </section>
 
-    <section class="contact" id="contact" aria-labelledby="contact-title"><div class="wrap"><div class="section-top" data-draw-line><p class="eyebrow"><span class="section-number">04</span> THE NEXT CONVERSATION</p><span class="small-note">IDEAS BEGIN WITH A HELLO</span></div><div class="contact-heading" data-reveal><h2 id="contact-title">Let’s make<br>something <em>meaningful.</em></h2><a href="mailto:kolleneaikaleyson@gmail.com" class="contact-arrow" data-magnetic aria-label="Email Kollene Aika Leyson">↗</a></div><div class="contact-bottom" data-draw-line><div><p>Have an opportunity, an idea, or a different way<br class="desktop-break"> of seeing things? I’d love to hear from you.</p><div class="email-line"><a href="mailto:kolleneaikaleyson@gmail.com">kolleneaikaleyson@gmail.com</a><button id="copy-email" aria-label="Copy email address" title="Copy email address"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="1"/><path d="M16 8V4H4v12h4"/></svg></button></div><span class="copy-status" id="copy-status" role="status" aria-live="polite"></span></div><div class="contact-links"><a href="tel:+639260315517">+63 926 031 5517 <span aria-hidden="true">↗</span></a><a href="https://www.instagram.com/kolleneeee/" target="_blank" rel="noopener noreferrer">Instagram <span aria-hidden="true">↗</span></a><a href="https://www.facebook.com/aika.leyson" target="_blank" rel="noopener noreferrer">Facebook <span aria-hidden="true">↗</span></a></div></div></div></section>
+    <section class="contact" id="contact" aria-labelledby="contact-title"><div class="wrap"><div class="section-top" data-draw-line><p class="eyebrow"><span class="section-number">04</span> CONTACT</p></div><div class="contact-heading" data-reveal><h2 id="contact-title">Let’s talk<br><em>architecture.</em></h2><a href="mailto:kolleneaikaleyson@gmail.com" class="contact-arrow" data-magnetic aria-label="Email Kollene Aika Leyson">↗</a></div><div class="contact-bottom" data-draw-line><div><p>Have an opportunity or an idea? I’d love to hear from you.</p><div class="email-line"><a href="mailto:kolleneaikaleyson@gmail.com">kolleneaikaleyson@gmail.com</a><button id="copy-email" aria-label="Copy email address" title="Copy email address"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="1"/><path d="M16 8V4H4v12h4"/></svg></button></div><span class="copy-status" id="copy-status" role="status" aria-live="polite"></span></div><div class="contact-links"><a href="tel:+639260315517">+63 926 031 5517 <span aria-hidden="true">↗</span></a><a href="https://www.instagram.com/kolleneeee/" target="_blank" rel="noopener noreferrer">Instagram <span aria-hidden="true">↗</span></a><a href="https://www.facebook.com/aika.leyson" target="_blank" rel="noopener noreferrer">Facebook <span aria-hidden="true">↗</span></a></div></div></div></section>
   </main>
-  <footer class="wrap"><a class="footer-logo" href="#">Kollene Aika Leyson<span>ARCHITECTURE & DESIGN</span></a><p>Academic explorations. An evolving perspective.</p><a class="back-top" href="#">BACK TO TOP <span aria-hidden="true">↑</span></a></footer>
+  <footer class="wrap"><a class="footer-logo" href="#home">Kollene Aika Leyson<span>ARCHITECTURE & DESIGN</span></a><p>Academic work · Mapúa University</p><details class="footer-motion-settings"><summary>Animation settings</summary><label class="site-motion-control" id="site-motion-control" hidden><span>Motion</span><select id="site-motion-setting" aria-label="Website motion"><option value="on">On</option><option value="off">Off</option><option value="system">Device setting</option></select></label></details><a class="back-top" href="#home">BACK TO TOP <span aria-hidden="true">↑</span></a></footer>
 
   <dialog id="project-dialog" aria-labelledby="project-title"><div class="dialog-toolbar"><span class="eyebrow">A CLOSER LOOK / ACADEMIC STUDY</span><button class="close-dialog" aria-label="Close project details">Close <span aria-hidden="true">×</span></button></div><div id="project-content"></div></dialog>
   <dialog id="portfolio-dialog" aria-labelledby="portfolio-title"><div class="dialog-toolbar"><div><p class="eyebrow">THE COMPLETE COLLECTION</p><h2 id="portfolio-title">Portfolio, in detail.</h2></div><div class="dialog-toolbar-actions"><a class="loupe-toggle" id="board-open-link" href="assets/boards/page-01.webp" target="_blank" rel="noopener">Open full board ↗</a><button type="button" class="loupe-toggle" id="board-zoom-toggle" aria-pressed="false">Inspect 2×</button><button class="close-dialog" aria-label="Close full portfolio">Close <span aria-hidden="true">×</span></button></div></div><div class="board-controls"><button id="previous-board" aria-label="Previous portfolio page">← <span>Previous</span></button><label for="board-select" class="sr-only">Select portfolio page</label><select id="board-select"></select><button id="next-board" aria-label="Next portfolio page"><span>Next</span> →</button></div><div class="board-stage" id="board-stage"><img id="board-image" src="assets/boards/page-01.webp" alt="Portfolio page 1: About Kollene" width="1600" height="1132"></div><div class="board-filmstrip" id="board-filmstrip" role="group" aria-label="Quick page selector"></div><p class="board-caption">Original academic presentation boards · Kollene Aika Leyson · Use the page selector, arrow keys, or Inspect 2× zoom to explore all 20 pages.</p></dialog>

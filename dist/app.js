@@ -68,7 +68,8 @@ const boardTitles = [
   'Scale models', 'Manual plates: pencil, pen & ink', 'Manual plates: color & rendering', 'Contact'
 ];
 
-const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const motionPreferenceQuery = window.portfolioMotion;
+const prefersReducedMotion = () => motionPreferenceQuery.matches;
 
 const projectDialog = document.querySelector('#project-dialog');
 const portfolioDialog = document.querySelector('#portfolio-dialog');
@@ -78,7 +79,8 @@ const boardStage = document.querySelector('#board-stage');
 const boardFilmstrip = document.querySelector('#board-filmstrip');
 const boardZoomToggle = document.querySelector('#board-zoom-toggle');
 let currentBoard = 1;
-let lastOpener = null;
+const dialogOpeners = new WeakMap();
+let boardAnimation = null;
 
 // Populate board select and 20-page filmstrip
 boardTitles.forEach((title, index) => {
@@ -132,21 +134,20 @@ async function closeTopLayer(dialog) {
   }
   dialog.close();
   dialog.removeAttribute('data-closing');
-  if (lastOpener && typeof lastOpener.focus === 'function') {
-    lastOpener.focus();
-  }
+
 }
 
 function openProject(key, opener) {
   const project = projects[key];
   if (!project) return;
-  if (opener) lastOpener = opener;
+  if (opener) dialogOpeners.set(projectDialog, opener);
   // This template interpolates only the fixed, source-verified content above.
   document.querySelector('#project-content').innerHTML = `
     <div class="dialog-project-heading"><p class="eyebrow">${project.category.toUpperCase()} / ${project.location.toUpperCase()}</p><h2 id="project-title">${project.title}</h2><p>${project.tagline}</p></div>
-    <img class="detail-image" src="assets/${project.image}.webp" alt="${project.title} academic architectural visualization">
+    <img class="detail-image" src="assets/${project.image}.webp${project.image === 'manor' ? '?v=restored' : ''}" alt="${project.title} academic architectural visualization">
     <div class="detail-meta"><div><span>PROJECT TYPE</span>${project.type}</div><div><span>CONTEXT</span>Academic design proposal</div><div><span>PRESENTED THROUGH</span>${project.deliverables}</div></div>
-    <div class="detail-text"><div><h3>The design question.</h3><p>${project.question}</p></div><div><h3>The proposed response.</h3><p>${project.response}</p></div><div><h3>The work behind it.</h3><p>${project.work}</p></div></div>
+    <p class="detail-summary">${project.response}</p>
+    <details class="detail-notes"><summary>Design notes</summary><div class="detail-text"><div><h3>The design question.</h3><p>${project.question}</p></div><div><h3>The work behind it.</h3><p>${project.work}</p></div></div></details>
     <div class="detail-credit"><p class="eyebrow">PROJECT CREDIT</p><p>${project.credit}</p></div>
     <div class="detail-footer"><button class="button" data-board="${project.page}">View original presentation board <span aria-hidden="true">↗</span></button><p>Source: original portfolio, page ${project.page} of 20.</p></div>`;
   projectDialog.showModal();
@@ -180,13 +181,14 @@ function showBoard(page) {
     });
   }
 
+  boardAnimation?.cancel();
   if (!prefersReducedMotion() && prevBoard !== currentBoard && boardImage.animate) {
-    boardImage.animate(
+    boardAnimation = boardImage.animate(
       [
-        { opacity: 0.35, transform: `translateX(${direction * 18}px) scale(0.992)` },
+        { opacity: 0.35, transform: `translateX(${direction * 6}px)` },
         { opacity: 1, transform: 'translateX(0) scale(1)' }
       ],
-      { duration: 280, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }
+      { duration: 220, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }
     );
   }
 }
@@ -198,7 +200,12 @@ document.addEventListener('click', event => {
   }
   const boardButton = event.target.closest('[data-board]');
   if (boardButton) {
-    if (projectDialog.open) projectDialog.close();
+    const returnTarget = projectDialog.open ? dialogOpeners.get(projectDialog) : boardButton;
+    if (projectDialog.open) {
+      projectDialog.dataset.handoff = 'true';
+      projectDialog.close();
+    }
+    dialogOpeners.set(portfolioDialog, returnTarget || boardButton);
     setBoardZoom(false);
     showBoard(boardButton.dataset.board);
     portfolioDialog.showModal();
@@ -243,6 +250,11 @@ if (boardZoomToggle && boardStage) {
 }
 
 document.querySelectorAll('dialog').forEach(dialog => {
+  dialog.addEventListener('close', () => {
+    if (dialog.dataset.handoff) { delete dialog.dataset.handoff; return; }
+    const opener = dialogOpeners.get(dialog);
+    if (opener?.isConnected && !opener.closest('dialog:not([open])')) opener.focus();
+  });
   dialog.addEventListener('click', event => {
     const bounds = dialog.getBoundingClientRect();
     if (event.target === dialog && (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom)) {
@@ -251,67 +263,46 @@ document.querySelectorAll('dialog').forEach(dialog => {
   });
 });
 
-// Category Filter with synchronous DOM update + FLIP animation
+// Filters own the card layout; image/text entrances own separate child transforms.
+const filterAnimations = new Set();
 document.querySelectorAll('.filter').forEach(button => button.addEventListener('click', () => {
-  const cards = Array.from(document.querySelectorAll('.project-card'));
-  const reduce = prefersReducedMotion();
-  const prevRects = new Map();
-  if (!reduce) {
-    cards.forEach(card => {
-      if (!card.hidden) prevRects.set(card, card.getBoundingClientRect());
-    });
-  }
-
+  filterAnimations.forEach(animation => animation.cancel());
+  filterAnimations.clear();
+  const cards = [...document.querySelectorAll('.project-card')];
+  const previous = new Map();
+  if (!prefersReducedMotion()) cards.filter(card => !card.hidden).forEach(card => previous.set(card, card.getBoundingClientRect()));
   document.querySelectorAll('.filter').forEach(filter => {
-    const active = filter === button;
-    filter.classList.toggle('active', active);
-    filter.setAttribute('aria-pressed', String(active));
+    const selected = filter === button;
+    filter.classList.toggle('active', selected);
+    filter.setAttribute('aria-pressed', String(selected));
   });
-
-  let count = 0;
-  cards.forEach(card => {
-    card.hidden = button.dataset.filter !== 'all' && card.dataset.category !== button.dataset.filter;
-    if (!card.hidden) count++;
-  });
-  const archiveCards = Array.from(document.querySelectorAll('.archive-card'));
-  let archiveVisibleCount = 0;
-  archiveCards.forEach(card => {
-    card.hidden = button.dataset.filter !== 'all' && card.dataset.category !== button.dataset.filter;
-    if (!card.hidden) archiveVisibleCount++;
-  });
+  const visible = card => button.dataset.filter === 'all' || card.dataset.category === button.dataset.filter;
+  cards.forEach(card => { card.hidden = !visible(card); });
+  const archive = [...document.querySelectorAll('.archive-card')];
+  archive.forEach(card => { card.hidden = !visible(card); });
   const archiveSection = document.querySelector('#archive-section');
-  if (archiveSection) archiveSection.hidden = archiveVisibleCount === 0;
+  if (archiveSection) archiveSection.hidden = !archive.some(card => !card.hidden);
+  const count = cards.filter(card => !card.hidden).length;
   document.querySelector('#filter-status').textContent = `${count} featured ${count === 1 ? 'study' : 'studies'} shown.`;
-
-  if (!reduce) {
-    cards.forEach((card, idx) => {
-      if (card.hidden || !card.animate) return;
-      const nextRect = card.getBoundingClientRect();
-      const prevRect = prevRects.get(card);
-      if (prevRect) {
-        const dx = prevRect.left - nextRect.left;
-        const dy = prevRect.top - nextRect.top;
-        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-          card.animate(
-            [
-              { transform: `translate(${dx}px, ${dy}px)` },
-              { transform: 'translate(0, 0)' }
-            ],
-            { duration: 420, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }
-          );
-        }
-      } else {
-        card.animate(
-          [
-            { opacity: 0, transform: 'translateY(18px) scale(0.97)' },
-            { opacity: 1, transform: 'translateY(0) scale(1)' }
-          ],
-          { duration: 380, delay: Math.min(idx * 45, 180), easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'both' }
-        );
-      }
-    });
-  }
+  if (!prefersReducedMotion()) cards.forEach(card => {
+    if (card.hidden || !card.animate || !previous.has(card)) return;
+    const before = previous.get(card), after = card.getBoundingClientRect();
+    const dx = before.left - after.left, dy = before.top - after.top;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+    const animation = card.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.16,1,.3,1)' });
+    filterAnimations.add(animation);
+    animation.finished.then(() => { animation.cancel(); filterAnimations.delete(animation); }).catch(() => {});
+  });
+  document.dispatchEvent(new Event('portfolio:filter-change'));
 }));
+motionPreferenceQuery.addEventListener('change', () => {
+  if (prefersReducedMotion()) { filterAnimations.forEach(animation => animation.cancel()); filterAnimations.clear(); boardAnimation?.cancel(); }
+});
+document.addEventListener('visibilitychange', () => {
+  filterAnimations.forEach(animation => document.hidden ? animation.pause() : animation.play());
+  if (boardAnimation?.playState === 'running' && document.hidden) boardAnimation.pause();
+  else if (boardAnimation?.playState === 'paused' && !document.hidden) boardAnimation.play();
+});
 
 boardSelect.addEventListener('change', () => showBoard(boardSelect.value));
 document.querySelector('#previous-board').addEventListener('click', () => showBoard(currentBoard - 1));
@@ -349,113 +340,17 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
 });
 
 // ============================================================================
-// IMPECCABLE MOTION, SCROLL CHOREOGRAPHY & MAGNETIC CONTROLS
+// SCROLL PROGRESS
 // ============================================================================
-(function initMotionAndCursor() {
-  const rulerFill = document.querySelector('#scroll-ruler-fill');
-  const cursor = document.querySelector('#arch-cursor');
-  const cursorLabel = document.querySelector('#arch-cursor-label');
-  const cursorCoords = document.querySelector('#arch-cursor-coords');
-
-  function updateScrollProgress() {
-    if (!rulerFill) return;
-    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-    const progress = Math.min(1, Math.max(0, window.scrollY / maxScroll));
-    rulerFill.style.transform = `scaleX(${progress.toFixed(4)})`;
+(function initScrollProgress() {
+  const ruler = document.querySelector('#scroll-ruler-fill');
+  let frame = null;
+  function updateProgress() {
+    frame = null;
+    if (ruler) ruler.style.transform = `scaleX(${Math.min(1, Math.max(0, scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight)))})`;
   }
-  window.addEventListener('scroll', updateScrollProgress, { passive: true });
-  updateScrollProgress();
-
-  // Scroll-driven animation fallback for browsers without animation-timeline: view()
-  if (!prefersReducedMotion() && !window.CSS?.supports?.('(animation-timeline: view()) and (animation-range: entry)')) {
-    const revealEls = document.querySelectorAll('[data-reveal]');
-    const revealObs = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.style.opacity = '1';
-          entry.target.style.transform = 'translateY(0)';
-        }
-      });
-    }, { threshold: 0.15 });
-    revealEls.forEach(el => {
-      el.style.opacity = '0';
-      el.style.transform = 'translateY(22px)';
-      el.style.transition = 'opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1)';
-      revealObs.observe(el);
-    });
-  }
-
-  if (prefersReducedMotion()) return;
-
-  // Custom architectural reticle cursor on fine-pointer viewports
-  if (cursor && window.matchMedia('(pointer: fine)').matches) {
-    let targetX = -100, targetY = -100, curX = -100, curY = -100;
-    let rafId = null;
-
-    function renderCursor() {
-      curX += (targetX - curX) * 0.28;
-      curY += (targetY - curY) * 0.28;
-      cursor.style.transform = `translate3d(${curX + 14}px, ${curY + 14}px, 0)`;
-      if (Math.abs(targetX - curX) > 0.2 || Math.abs(targetY - curY) > 0.2) {
-        rafId = requestAnimationFrame(renderCursor);
-      } else {
-        rafId = null;
-      }
-    }
-
-    window.addEventListener('pointermove', e => {
-      targetX = e.clientX;
-      targetY = e.clientY;
-      cursor.classList.add('visible');
-      if (cursorCoords) {
-        cursorCoords.textContent = `${String(Math.round(e.clientX)).padStart(3, '0')} · ${String(Math.round(e.clientY)).padStart(3, '0')}`;
-      }
-      const hoverContext = e.target.closest('[data-cursor]');
-      if (hoverContext && cursorLabel) {
-        cursor.classList.add('active');
-        cursorLabel.textContent = hoverContext.dataset.cursor;
-      } else {
-        cursor.classList.remove('active');
-      }
-      if (!rafId) rafId = requestAnimationFrame(renderCursor);
-    }, { passive: true });
-
-    document.addEventListener('pointerleave', () => cursor.classList.remove('visible'));
-  }
-
-  // Magnetic pull on key architectural buttons
-  document.querySelectorAll('[data-magnetic]').forEach(el => {
-    el.addEventListener('pointermove', e => {
-      if (prefersReducedMotion()) return;
-      const rect = el.getBoundingClientRect();
-      const dx = (e.clientX - (rect.left + rect.width / 2)) * 0.22;
-      const dy = (e.clientY - (rect.top + rect.height / 2)) * 0.22;
-      el.style.transform = `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
-    });
-    el.addEventListener('pointerleave', () => {
-      el.style.transform = '';
-    });
-  });
-
-  // 3D Perspective Tilt + Specular Glint on Project Cards
-  document.querySelectorAll('.project-image').forEach(cardImg => {
-    cardImg.addEventListener('pointermove', e => {
-      if (prefersReducedMotion()) return;
-      const rect = cardImg.getBoundingClientRect();
-      const nx = (e.clientX - rect.left) / rect.width;
-      const ny = (e.clientY - rect.top) / rect.height;
-      const rx = (0.5 - ny) * 4.5;
-      const ry = (nx - 0.5) * 5.5;
-      cardImg.style.setProperty('--rx', `${rx.toFixed(2)}deg`);
-      cardImg.style.setProperty('--ry', `${ry.toFixed(2)}deg`);
-      cardImg.style.setProperty('--mx', `${(nx * 100).toFixed(1)}%`);
-      cardImg.style.setProperty('--my', `${(ny * 100).toFixed(1)}%`);
-    });
-    cardImg.addEventListener('pointerleave', () => {
-      cardImg.style.setProperty('--rx', '0deg');
-      cardImg.style.setProperty('--ry', '0deg');
-    });
-  });
+  addEventListener('scroll', () => { if (!frame) frame = requestAnimationFrame(updateProgress); }, { passive: true });
+  updateProgress();
 })();
 
 // ============================================================================
@@ -499,6 +394,8 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
 
   // 1. Hero Heliodon Shader (Three.js WebGLRenderer with 2D fallback)
   let requestHeliodonRender = () => {};
+  let stopHeliodonRender = () => {};
+  let lightingStudyActive = false;
   if (heroHeliodonCanvas && heroSourceImage) {
     const useWebGL = THREE && canUseWebGL();
 
@@ -522,6 +419,8 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
 
           const uniforms = {
             uTexture: { value: texture },
+            uImageResolution: { value: new THREE.Vector2(heroSourceImage.naturalWidth, heroSourceImage.naturalHeight) },
+            uStudyActive: { value: 0 },
             uSun: { value: new THREE.Vector2(pointerSunX, pointerSunY) },
             uSunProgress: { value: sunProgress },
             uElevation: { value: 0.0 },
@@ -541,6 +440,8 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
               precision mediump float;
               varying vec2 vUv;
               uniform sampler2D uTexture;
+              uniform vec2 uImageResolution;
+              uniform float uStudyActive;
               uniform vec2 uSun;
               uniform float uSunProgress;
               uniform float uElevation;
@@ -551,14 +452,20 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
               }
 
               void main() {
-                vec2 texel = 1.5 / max(uResolution, vec2(400.0));
-                vec3 base = texture2D(uTexture, vUv).rgb;
+                // Match object-fit:cover instead of stretching architectural proportions.
+                vec2 coverUv = vUv;
+                float imageAspect = uImageResolution.x / uImageResolution.y;
+                float frameAspect = uResolution.x / uResolution.y;
+                if (frameAspect > imageAspect) coverUv.y = (vUv.y - .5) * imageAspect / frameAspect + .5;
+                else coverUv.x = (vUv.x - .5) * frameAspect / imageAspect + .5;
+                vec2 texel = 1.5 / max(uImageResolution, vec2(400.0));
+                vec3 base = texture2D(uTexture, coverUv).rgb;
 
                 // Architectural surface relief normals from luminance gradients
-                float lL = luma(texture2D(uTexture, vUv + vec2(-texel.x, 0.0)).rgb);
-                float lR = luma(texture2D(uTexture, vUv + vec2(texel.x, 0.0)).rgb);
-                float lD = luma(texture2D(uTexture, vUv + vec2(0.0, -texel.y)).rgb);
-                float lU = luma(texture2D(uTexture, vUv + vec2(0.0, texel.y)).rgb);
+                float lL = luma(texture2D(uTexture, coverUv + vec2(-texel.x, 0.0)).rgb);
+                float lR = luma(texture2D(uTexture, coverUv + vec2(texel.x, 0.0)).rgb);
+                float lD = luma(texture2D(uTexture, coverUv + vec2(0.0, -texel.y)).rgb);
+                float lU = luma(texture2D(uTexture, coverUv + vec2(0.0, texel.y)).rgb);
 
                 vec3 normal = normalize(vec3((lL - lR) * 2.6, (lD - lU) * 2.6, 1.0));
                 vec3 lightDir = normalize(vec3((uSun.x - vUv.x) * 1.6, (1.0 - uSun.y - vUv.y) * 1.4, 0.65));
@@ -589,7 +496,7 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
                 vec3 oliveWash = vec3(0.86, 0.88, 0.82);
                 vec3 blueprint = mix(mix(oliveWash, paper, luma(base)), ink, smoothstep(0.08, 0.42, edge));
 
-                vec3 finalColor = mix(litColor, blueprint, uElevation);
+                vec3 finalColor = mix(mix(base, litColor, uStudyActive * .42), blueprint, uElevation);
                 gl_FragColor = vec4(finalColor, 1.0);
               }
             `
@@ -615,11 +522,13 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
 
           const renderLoop = () => {
             animFrame = null;
-            currentElevation += (targetElevation - currentElevation) * 0.18;
+            const mix = prefersReducedMotion() ? 1 : .18;
+            currentElevation += (targetElevation - currentElevation) * mix;
             uniforms.uElevation.value = currentElevation;
-            uniforms.uSun.value.x += (targetSunX - uniforms.uSun.value.x) * 0.18;
-            uniforms.uSun.value.y += (targetSunY - uniforms.uSun.value.y) * 0.18;
+            uniforms.uSun.value.x += (targetSunX - uniforms.uSun.value.x) * mix;
+            uniforms.uSun.value.y += (targetSunY - uniforms.uSun.value.y) * mix;
             uniforms.uSunProgress.value = sunProgress;
+            uniforms.uStudyActive.value = lightingStudyActive ? 1 : 0;
             renderer.render(scene, camera);
 
             if (
@@ -631,11 +540,17 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
             }
           };
 
-          requestHeliodonRender = () => {
-            targetElevation = elevationMode ? 1.0 : 0.0;
-            targetSunX = pointerSunX;
-            targetSunY = pointerSunY;
-            if (!animFrame) animFrame = requestAnimationFrame(renderLoop);
+          stopHeliodonRender = () => { if (animFrame) cancelAnimationFrame(animFrame); animFrame = null; };
+          requestHeliodonRender = (instant = false) => {
+            targetElevation = elevationMode ? 1 : 0;
+            targetSunX = pointerSunX; targetSunY = pointerSunY;
+            if (document.hidden) { stopHeliodonRender(); return; }
+            if (instant || prefersReducedMotion()) {
+              stopHeliodonRender();
+              currentElevation = targetElevation;
+              uniforms.uSun.value.set(targetSunX, targetSunY);
+              renderLoop();
+            } else if (!animFrame) animFrame = requestAnimationFrame(renderLoop);
           };
 
           heroHeliodonCanvas.classList.add('ready');
@@ -646,13 +561,20 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
         }
       }
 
-      // Clean CSS/2D fallback when WebGL is unavailable
+      // Photo-preserving fallback: only static-color overlay opacity changes.
+      const warmTone = document.createElement('span');
+      const coolTone = document.createElement('span');
+      warmTone.className = 'heliodon-tone heliodon-tone-warm';
+      coolTone.className = 'heliodon-tone heliodon-tone-cool';
+      [warmTone, coolTone].forEach(tone => { tone.setAttribute('aria-hidden', 'true'); heroStage.appendChild(tone); });
       requestHeliodonRender = () => {
-        const warmth = Math.sin(sunProgress * Math.PI);
+        const playing = lightingStudyActive && !elevationMode;
+        warmTone.style.opacity = playing ? String(.025 + .07 * Math.sin(sunProgress * Math.PI)) : '0';
+        coolTone.style.opacity = playing ? String(.07 * Math.pow(Math.abs(sunProgress - .5) * 2, 2)) : '0';
         if (elevationMode) {
           heroSourceImage.style.filter = 'grayscale(1) contrast(1.45) sepia(0.25) brightness(1.04)';
         } else {
-          heroSourceImage.style.filter = `sepia(${(0.18 * (1 - warmth)).toFixed(2)}) saturate(${(0.95 + sunProgress * 0.25).toFixed(2)}) contrast(1.03)`;
+          heroSourceImage.style.filter = 'none';
         }
       };
       requestHeliodonRender();
@@ -667,6 +589,7 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
 
   if (sunSlider) {
     sunSlider.addEventListener('input', () => {
+      lightingStudyActive = true;
       sunProgress = Number(sunSlider.value) / 100;
       pointerSunX = 0.12 + sunProgress * 0.78;
       pointerSunY = 0.18 + Math.pow(sunProgress - 0.5, 2) * 1.1;
@@ -683,18 +606,75 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
       const meta = document.querySelector('#hero-study-meta');
       if (meta) meta.textContent = elevationMode ? '01 / 06 · ELEVATION LINE PASS' : '01 / 06 · HELIODON ACTIVE';
       requestHeliodonRender();
+      syncDaylight();
     });
   }
 
-  if (heroStage) {
-    heroStage.addEventListener('pointermove', e => {
-      if (prefersReducedMotion()) return;
-      const rect = heroStage.getBoundingClientRect();
-      pointerSunX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      pointerSunY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-      requestHeliodonRender();
-    }, { passive: true });
+  // The portrait sets midday light; its resting backdrop follows a slow daylight loop.
+  let portraitActive = document.querySelector('#portrait-toggle')?.dataset.alternate === 'true';
+  let daylightVisible = false, daylightPaused = false, daylightFrame = null, previousDaylightTime = null;
+  let daylightPhase = Math.acos(1 - 2 * sunProgress) / (Math.PI * 2), lastDaylightRender = 0;
+  const daylightPause = document.querySelector('#heliodon-pause');
+  function stopDaylight() {
+    if (daylightFrame) cancelAnimationFrame(daylightFrame);
+    daylightFrame = null; previousDaylightTime = null;
   }
+  function canPlayDaylight() { return daylightVisible && !portraitActive && !elevationMode && !daylightPaused && !prefersReducedMotion() && !document.hidden; }
+  function daylightTick(now) {
+    daylightFrame = null;
+    if (!canPlayDaylight()) return;
+    if (previousDaylightTime !== null) daylightPhase += Math.min(100, now - previousDaylightTime) / 48000;
+    previousDaylightTime = now;
+    if (now - lastDaylightRender >= 1000 / 24) {
+      lastDaylightRender = now;
+      sunProgress = .5 - .5 * Math.cos(daylightPhase * Math.PI * 2);
+      pointerSunX = .12 + sunProgress * .78;
+      pointerSunY = .18 + Math.pow(sunProgress - .5, 2) * 1.1;
+      lightingStudyActive = true;
+      if (sunSlider) sunSlider.value = String(Math.round(sunProgress * 100));
+      const readout = formatSolarTime(sunProgress);
+      if (heliodonTime && heliodonTime.textContent !== readout) heliodonTime.textContent = readout;
+      if (heroStage) heroStage.dataset.daylightState = 'playing';
+      requestHeliodonRender(true);
+    }
+    daylightFrame = requestAnimationFrame(daylightTick);
+  }
+  function syncDaylight() {
+    stopDaylight();
+    const meta = document.querySelector('#hero-study-meta');
+    if (meta) meta.textContent = `Siete Lagos Manor · ${elevationMode ? 'ELEVATION LINES' : portraitActive ? 'MIDDAY LIGHT' : prefersReducedMotion() ? 'STILL DAYLIGHT' : daylightPaused ? 'DAYLIGHT PAUSED' : 'DAYLIGHT LOOP'}`;
+    if (daylightPause) {
+      daylightPause.disabled = prefersReducedMotion();
+      daylightPause.textContent = prefersReducedMotion() ? 'Still daylight' : daylightPaused ? 'Play daylight' : 'Pause daylight';
+      daylightPause.title = prefersReducedMotion() ? 'Automatic playback is off. Change the Motion setting to On to animate.' : '';
+      daylightPause.setAttribute('aria-pressed', String(daylightPaused));
+    }
+    if (prefersReducedMotion()) { lightingStudyActive = false; requestHeliodonRender(true); }
+    if (canPlayDaylight()) daylightFrame = requestAnimationFrame(daylightTick);
+    else if (heroStage) heroStage.dataset.daylightState = prefersReducedMotion() ? 'reduced-motion' : portraitActive ? 'portrait-midday' : elevationMode ? 'elevation' : daylightPaused ? 'paused' : 'offscreen';
+  }
+  daylightPause?.addEventListener('click', () => { daylightPaused = !daylightPaused; syncDaylight(); });
+  document.addEventListener('portfolio:portrait-state', event => {
+    portraitActive = Boolean(event.detail.alternate);
+    elevationMode = false;
+    heliodonModeBtn?.setAttribute('aria-pressed', 'false');
+    if (heliodonModeBtn) heliodonModeBtn.textContent = 'Elevation lines';
+    sunProgress = portraitActive ? .46 : .74;
+    daylightPhase = Math.acos(1 - 2 * sunProgress) / (Math.PI * 2);
+    pointerSunX = .12 + sunProgress * .78;
+    pointerSunY = .18 + Math.pow(sunProgress - .5, 2) * 1.1;
+    if (heliodonTime) heliodonTime.textContent = formatSolarTime(sunProgress);
+    heroStage.dataset.sunState = portraitActive ? 'midday' : 'warm';
+    syncDaylight();
+    lightingStudyActive = true;
+    requestHeliodonRender();
+  });
+  if (heroStage && window.IntersectionObserver) new IntersectionObserver(entries => {
+    daylightVisible = entries[0].isIntersecting; syncDaylight();
+  }, { threshold: .12 }).observe(heroStage);
+  motionPreferenceQuery.addEventListener('change', syncDaylight);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stopHeliodonRender(); syncDaylight(); });
+  window.addEventListener('pagehide', () => { stopDaylight(); stopHeliodonRender(); });
 
   // 2. Hero Ambient 3D Axonometric Architectural Grid (#hero-axon-canvas)
   const axonCanvas = document.querySelector('#hero-axon-canvas');
@@ -724,8 +704,8 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
       const h = axonCanvas.clientHeight || 620;
       ctx.clearRect(0, 0, w, h);
 
-      const scrollShift = Math.min(1.5, window.scrollY / 600);
-      camera.position.set(6.5 + mouseNx * 0.8, 5.2 - scrollShift * 0.9 + mouseNy * 0.5, 8.5);
+      const scrollShift = prefersReducedMotion() ? 0 : Math.min(1.5, window.scrollY / 600);
+      camera.position.set(6.5 + (prefersReducedMotion() ? 0 : mouseNx * 0.8), 5.2 - scrollShift * 0.9 + (prefersReducedMotion() ? 0 : mouseNy * 0.5), 8.5);
       camera.lookAt(0.5, 0.2, 0);
       camera.updateMatrixWorld();
 
@@ -776,12 +756,13 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
     resizeAxon();
     drawAxon();
     window.addEventListener('resize', () => { resizeAxon(); drawAxon(); });
-    if (!prefersReducedMotion()) {
+    motionPreferenceQuery.addEventListener('change', drawAxon);
+    {
       window.addEventListener('scroll', () => {
-        if (window.scrollY < 900) requestAnimationFrame(drawAxon);
+        if (!prefersReducedMotion() && !document.hidden && window.scrollY < 900) requestAnimationFrame(drawAxon);
       }, { passive: true });
       window.addEventListener('pointermove', e => {
-        if (window.scrollY > 900) return;
+        if (prefersReducedMotion() || document.hidden || window.scrollY > 900) return;
         mouseNx = (e.clientX / window.innerWidth - 0.5) * 2;
         mouseNy = (e.clientY / window.innerHeight - 0.5) * 2;
         requestAnimationFrame(drawAxon);
@@ -866,9 +847,9 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
 
     drawMini();
     const article = canvas.closest('article');
-    if (article && !prefersReducedMotion()) {
+    if (article) {
       const tick = () => {
-        if (!isHovered) return;
+        if (!isHovered || prefersReducedMotion() || document.hidden) return;
         angle += 0.035;
         drawMini();
         requestAnimationFrame(tick);
@@ -890,42 +871,49 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
     tensegrity: {
       principle: 'Isolated compression struts within a continuous tension network',
       material: 'Tensegrity scale model exploring tension, compression & structural balance (Board 17)',
-      badge: 'MODEL 01 · TENSEGRITY (BOARD 17)'
+      badge: 'MODEL 01 · TENSEGRITY (BOARD 17)',
+      source: { file: 'source-tensegrity.webp', width: 418, height: 337, title: 'Tensegrity' }
     },
     thinshell: {
       principle: 'Curved surface load distribution & axial membrane behavior',
       material: 'Thin Shell Structure scale model exploring curved geometry & shell action (Board 17)',
-      badge: 'MODEL 02 · THIN SHELL STRUCTURE (BOARD 17)'
+      badge: 'MODEL 02 · THIN SHELL STRUCTURE (BOARD 17)',
+      source: { file: 'source-thinshell.webp', width: 436, height: 303, title: 'Thin Shell Structure' }
     },
     origami: {
       principle: 'Folded surface geometry increasing stiffness via ridge & valley creases',
       material: 'Paper Folding scale study exploring geometry, planes & form-making (Board 17)',
-      badge: 'MODEL 03 · PAPER FOLDING (BOARD 17)'
+      badge: 'MODEL 03 · PAPER FOLDING (BOARD 17)',
+      source: { file: 'source-origami.webp', width: 490, height: 344, title: 'Paper Folding' }
     },
     pavilion: {
       principle: 'Hierarchical tiered eaves, proportion & spatial relationships',
       material: 'Kinkakuji / The Golden Pavilion scale model exploring proportion & roof form (Board 17)',
-      badge: 'MODEL 04 · KINKAKUJI / THE GOLDEN PAVILION (BOARD 17)'
+      badge: 'MODEL 04 · KINKAKUJI / THE GOLDEN PAVILION (BOARD 17)',
+      source: { file: 'source-pavilion.webp', width: 442, height: 413, title: 'Kinkakuji / The Golden Pavilion' }
     },
     bridge: {
       principle: 'Triangulated truss span, axial member load transfer & tension-compression chords',
       material: 'Bamboo Stick Bridge scale model exploring span, structure & load distribution (Board 17)',
-      badge: 'MODEL 05 · BAMBOO STICK BRIDGE (BOARD 17)'
+      badge: 'MODEL 05 · BAMBOO STICK BRIDGE (BOARD 17)',
+      source: { file: 'source-bridge.webp', width: 451, height: 339, title: 'Bamboo Stick Bridge' }
     },
     museum: {
-      principle: 'Interlocking gallery volumes, courtyard framing & multi-level circulation',
-      material: 'Interconnected Museum scale model exploring spatial relationships & circulation (Board 17)',
-      badge: 'MODEL 06 · INTERCONNECTED MUSEUM (BOARD 17)'
+      principle: 'Radial roof arrangement, connected exhibition spaces and curved extensions',
+      material: 'Illustrative reconstruction from portfolio photographs. Unseen geometry and dimensions are approximate.',
+      badge: 'MODEL 06 · INTERCONNECTED MUSEUM (BOARD 17)',
+      source: { file: 'museum-oblique.webp', width: 615, height: 447, title: 'Interconnected Museum' }
     }
   };
 
   let activeStudy = 'tensegrity';
-  let showForceVectors = true;
+  let showForceVectors = false;
   let camYaw = 0.72, camPitch = 0.46, camDist = 7.2;
   let targetYaw = 0.72, targetPitch = 0.46, targetDist = 7.2;
   let isDragging = false, lastX = 0, lastY = 0;
   let isInViewport = false;
   let wbAnimId = null;
+  let currentCameraView = 'axon';
 
   // Build 3D Structural Geometries (grounded in all 6 Board 17 scale models)
   function buildStudyGeometry(studyKey) {
@@ -1039,27 +1027,7 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
       labels.push({ pos: [0, 1.15, -halfW * 0.86], text: 'TOP ARCH CHORD (COMPRESSION)' });
       labels.push({ pos: [0.75, deckY, halfW], text: 'DECK STRINGER (TENSION)' });
     } else if (studyKey === 'museum') {
-      // Model 06: Interconnected Museum — Linked gallery pavilions & skybridges around central court
-      const addWing = (cx, cy, cz, wx, wy, wz, roofLift = 0.18) => {
-        const b = verts.length;
-        [
-          [cx - wx, cy - wy, cz - wz], [cx + wx, cy - wy, cz - wz], [cx + wx, cy - wy, cz + wz], [cx - wx, cy - wy, cz + wz],
-          [cx - wx, cy + wy, cz - wz], [cx + wx, cy + wy + roofLift, cz - wz], [cx + wx, cy + wy + roofLift, cz + wz], [cx - wx, cy + wy, cz + wz]
-        ].forEach(p => verts.push(new THREE.Vector3(...p)));
-        [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]].forEach(([a,k], idx) => {
-          edges.push({ a: b + a, b: b + k, role: idx >= 8 ? 'compression' : 'tension' });
-        });
-        faces.push({ indices: [b + 4, b + 5, b + 6, b + 7] }, { indices: [b + 1, b + 2, b + 6, b + 5] });
-      };
-      // North Gallery, West Gallery, East Atrium, and elevated circulation skybridges
-      addWing(-1.25, -0.35, -0.75, 0.72, 0.75, 0.62, 0.22);
-      addWing(1.22, -0.45, -0.55, 0.78, 0.65, 0.72, -0.18);
-      addWing(0.05, -0.55, 1.15, 1.15, 0.55, 0.58, 0.16);
-      // Skybridge 1 (West to East) & Skybridge 2 (East to South)
-      addWing(-0.02, -0.15, -0.65, 0.52, 0.22, 0.24, 0);
-      addWing(0.65, -0.25, 0.32, 0.26, 0.22, 0.48, 0);
-      labels.push({ pos: [-0.02, 0.18, -0.65], text: 'CIRCULATION SKYBRIDGE' });
-      labels.push({ pos: [0.05, 0.22, 1.15], text: 'GALLERY PAVILION MASSING' });
+      return window.buildMuseumStudyGeometry(THREE);
     } else {
       // Model 04: Kinkakuji / The Golden Pavilion (3 tiered eaves + colonnade)
       const addTier = (yBot, yTop, wBot, dBot, wEave, dEave, apexH) => {
@@ -1089,8 +1057,8 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
 
   function resizeWorkbench() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const w = wbStage.clientWidth || 720;
-    const h = wbStage.clientHeight || 420;
+    const w = wbCanvas.clientWidth || 720;
+    const h = wbCanvas.clientHeight || 420;
     wbCanvas.width = w * dpr;
     wbCanvas.height = h * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1100,21 +1068,18 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
 
   function renderWorkbench() {
     wbAnimId = null;
-    const w = wbStage.clientWidth || 720;
-    const h = wbStage.clientHeight || 420;
+    const w = wbCanvas.clientWidth || 720;
+    const h = wbCanvas.clientHeight || 420;
     ctx.clearRect(0, 0, w, h);
 
-    camYaw += (targetYaw - camYaw) * 0.16;
-    camPitch += (targetPitch - camPitch) * 0.16;
-    camDist += (targetDist - camDist) * 0.16;
-
-    const mobileScale = w < 520 ? 1.24 : 1.0;
-    const effDist = camDist * mobileScale;
+    camYaw = targetYaw; camPitch = targetPitch; camDist = targetDist;
+    const framingScale = Math.max(1, h / Math.max(1, w) * 1.12);
+    const effDist = camDist * framingScale;
     const cx = Math.cos(camPitch) * Math.cos(camYaw) * effDist;
     const cy = Math.sin(camPitch) * effDist;
     const cz = Math.cos(camPitch) * Math.sin(camYaw) * effDist;
     camera.position.set(cx, cy, cz);
-    camera.lookAt(0, 0.05, 0);
+    camera.lookAt(...(currentGeom.meta?.recommendedCamera?.target || [0, .05, 0]));
     camera.updateMatrixWorld();
 
     const project = v3 => {
@@ -1123,7 +1088,7 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
     };
 
     // 1. Ground architectural datum grid & shadow projection
-    const groundY = -1.42;
+    const groundY = currentGeom.groundY ?? -1.42;
     ctx.strokeStyle = 'rgba(114, 124, 85, 0.2)';
     ctx.lineWidth = 0.8;
     for (let g = -3; g <= 3; g++) {
@@ -1159,21 +1124,22 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
       const v = pts3[2].clone().sub(pts3[0]);
       const normal = u.cross(v).normalize();
       const shade = Math.abs(normal.dot(lightDir));
-      return { indices: f.indices, depth, shade };
+      return { ...f, depth, shade };
     }).sort((a, b) => b.depth - a.depth);
 
     sortedFaces.forEach(f => {
       const pts = f.indices.map(i => projectedVerts[i]);
       const lum = Math.round(215 + f.shade * 26);
-      ctx.fillStyle = `rgba(${lum - 14}, ${lum - 8}, ${lum - 22}, 0.58)`;
+      ctx.fillStyle = f.color ? new THREE.Color(f.color).multiplyScalar(.85 + f.shade * .15).getStyle() : `rgba(${lum - 14}, ${lum - 8}, ${lum - 22}, 0.58)`;
       ctx.beginPath();
       pts.forEach((p, idx) => (idx === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)));
       ctx.closePath();
       ctx.fill();
+      if (f.color && f.stroke !== false) { ctx.strokeStyle = f.stroke || '#a28a5e'; ctx.lineWidth = f.width || .65; ctx.stroke(); }
     });
 
-    // 3. Structural Edges (Compression vs. Tension vectors)
-    currentGeom.edges.forEach(e => {
+    // Photo-informed museum surfaces do not imply structural force paths.
+    if (currentGeom.renderMode !== 'solid-illustration') currentGeom.edges.forEach(e => {
       const pa = projectedVerts[e.a];
       const pb = projectedVerts[e.b];
       ctx.beginPath();
@@ -1197,7 +1163,7 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
     ctx.setLineDash([]);
 
     // 4. Structural Joints & Force Vector Callouts
-    projectedVerts.forEach(p => {
+    if (currentGeom.renderMode !== 'solid-illustration') projectedVerts.forEach(p => {
       ctx.fillStyle = '#344b3c';
       ctx.beginPath();
       ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
@@ -1205,7 +1171,7 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
     });
 
     if (showForceVectors) {
-      ctx.font = '600 8px "DM Sans", Arial, sans-serif';
+      ctx.font = '600 12px "DM Sans", Arial, sans-serif';
       currentGeom.labels.forEach(lbl => {
         const pt = project(new THREE.Vector3(...lbl.pos));
         ctx.strokeStyle = '#727c55';
@@ -1216,36 +1182,55 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
         ctx.lineTo(pt.x + 26, pt.y - 14);
         ctx.stroke();
 
-        const textW = ctx.measureText(lbl.text).width + 10;
+        const textW = Math.min(w - 16, ctx.measureText(lbl.text).width + 12);
+        const labelX = Math.max(8, Math.min(w - textW - 8, pt.x + 26));
+        const labelY = Math.max(8, Math.min(h - 26, pt.y - 26));
         ctx.fillStyle = 'rgba(245, 244, 238, 0.92)';
-        ctx.fillRect(pt.x + 26, pt.y - 22, textW, 15);
+        ctx.fillRect(labelX, labelY, textW, 22);
         ctx.strokeStyle = '#c5ccb9';
-        ctx.strokeRect(pt.x + 26, pt.y - 22, textW, 15);
+        ctx.strokeRect(labelX, labelY, textW, 22);
         ctx.fillStyle = '#28382d';
-        ctx.fillText(lbl.text, pt.x + 31, pt.y - 12);
+        ctx.fillText(lbl.text, labelX + 6, labelY + 15, textW - 12);
       });
     }
 
-    if (
-      Math.abs(targetYaw - camYaw) > 0.002 ||
-      Math.abs(targetPitch - camPitch) > 0.002 ||
-      Math.abs(targetDist - camDist) > 0.005 ||
-      (isInViewport && !isDragging && !prefersReducedMotion())
-    ) {
-      if (isInViewport && !isDragging && !prefersReducedMotion()) {
-        targetYaw += 0.0028;
-      }
-      wbAnimId = requestAnimationFrame(renderWorkbench);
-    }
+    wbCanvas.dataset.view = currentCameraView;
+    wbCanvas.dataset.yaw = String(camYaw);
+    wbCanvas.dataset.pitch = String(camPitch);
+    wbCanvas.dataset.distance = String(camDist);
+    wbCanvas.dataset.study = activeStudy;
   }
 
   function scheduleWorkbench() {
-    if (!wbAnimId) wbAnimId = requestAnimationFrame(renderWorkbench);
+    if (document.hidden) return;
+    if (prefersReducedMotion()) { if (wbAnimId) cancelAnimationFrame(wbAnimId); wbAnimId = null; renderWorkbench(); }
+    else if (!wbAnimId) wbAnimId = requestAnimationFrame(renderWorkbench);
   }
 
   resizeWorkbench();
   renderWorkbench();
   window.addEventListener('resize', () => { resizeWorkbench(); scheduleWorkbench(); });
+
+  const sourceButton = document.querySelector('#wb-source-toggle');
+  const sourcePanel = document.querySelector('#wb-source-panel');
+  const comparison = document.querySelector('#workbench-comparison');
+  function updateSourcePhoto() {
+    const source = studyMetadata[activeStudy].source;
+    const image = document.querySelector('#wb-source-image');
+    image.width = source.width; image.height = source.height;
+    image.alt = `Original ${source.title} physical model photograph from portfolio Board 17`;
+    image.src = `assets/${source.file}`;
+    document.querySelector('#wb-source-title').textContent = source.title;
+  }
+  sourceButton.addEventListener('click', () => {
+    const expanded = sourcePanel.hidden;
+    if (expanded) updateSourcePhoto();
+    sourcePanel.hidden = !expanded;
+    sourceButton.setAttribute('aria-expanded', String(expanded));
+    sourceButton.classList.toggle('active', expanded);
+    comparison.classList.toggle('source-open', expanded);
+    resizeWorkbench(); scheduleWorkbench();
+  });
 
   // Pause 3D workbench when offscreen (Impeccable Overdrive performance rule)
   const wbObserver = new IntersectionObserver(entries => {
@@ -1256,27 +1241,63 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
   }, { threshold: 0.05 });
   wbObserver.observe(wbStage);
 
-  // Drag to orbit 3D model
-  wbStage.addEventListener('pointerdown', e => {
-    if (e.target.closest('button')) return;
-    isDragging = true;
-    lastX = e.clientX;
-    lastY = e.clientY;
-    wbStage.setPointerCapture?.(e.pointerId);
+  function updateCameraButtons() {
+    document.querySelectorAll('[data-cam-view]').forEach(button => {
+      const selected = button.dataset.camView === currentCameraView;
+      button.classList.toggle('active', selected); button.setAttribute('aria-pressed', String(selected));
+    });
+  }
+  function orbitModel(dx, dy) {
+    currentCameraView = 'custom';
+    targetYaw += dx * .011;
+    targetPitch = Math.max(-.15, Math.min(Math.PI / 2 - .001, targetPitch + dy * .009));
+    updateCameraButtons(); scheduleWorkbench();
+  }
+  function zoomModel(delta) { targetDist = Math.max(4.8, Math.min(14, targetDist + delta)); scheduleWorkbench(); }
+  function setCamera(view) {
+    currentCameraView = view;
+    const recommended = currentGeom.meta?.recommendedCamera || { yaw: .72, pitch: .46, distance: 7.2 };
+    targetYaw = view === 'axon' ? recommended.yaw : Math.PI / 2;
+    targetPitch = view === 'plan' ? Math.PI / 2 - .001 : view === 'elevation' ? .02 : recommended.pitch;
+    targetDist = recommended.distance;
+    updateCameraButtons(); scheduleWorkbench();
+  }
+  let touchDrag = null;
+  wbStage.addEventListener('pointerdown', event => {
+    if (event.button !== 0 || event.target !== wbCanvas) return;
+    touchDrag = { id: event.pointerId, x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY, touch: event.pointerType === 'touch' };
+    isDragging = !touchDrag.touch; lastX = event.clientX; lastY = event.clientY;
+    wbCanvas.focus({ preventScroll: true });
+    if (isDragging) wbStage.setPointerCapture?.(event.pointerId);
   });
-  wbStage.addEventListener('pointermove', e => {
+  wbStage.addEventListener('pointermove', event => {
+    if (!touchDrag || touchDrag.id !== event.pointerId) return;
+    if (!isDragging && touchDrag.touch) {
+      const dx = event.clientX - touchDrag.startX, dy = event.clientY - touchDrag.startY;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 8) return;
+      if (Math.abs(dy) >= Math.abs(dx)) { touchDrag = null; return; }
+      isDragging = true; wbStage.setPointerCapture?.(event.pointerId);
+    }
     if (!isDragging) return;
-    const dx = e.clientX - lastX;
-    const dy = e.clientY - lastY;
-    lastX = e.clientX;
-    lastY = e.clientY;
-    targetYaw += dx * 0.011;
-    targetPitch = Math.max(-0.15, Math.min(1.42, targetPitch + dy * 0.009));
-    scheduleWorkbench();
+    if (event.cancelable) event.preventDefault();
+    orbitModel(event.clientX - lastX, touchDrag.touch ? 0 : event.clientY - lastY);
+    lastX = event.clientX; lastY = event.clientY;
+  }, { passive: false });
+  function endDrag() { isDragging = false; touchDrag = null; }
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(type => wbStage.addEventListener(type, endDrag));
+  const keyboardActions = {
+    ArrowLeft: () => orbitModel(-12, 0), ArrowRight: () => orbitModel(12, 0),
+    ArrowUp: () => orbitModel(0, -12), ArrowDown: () => orbitModel(0, 12),
+    '+': () => zoomModel(-.6), '=': () => zoomModel(-.6), '-': () => zoomModel(.6), Home: () => setCamera('axon')
+  };
+  wbCanvas.addEventListener('keydown', event => { if (keyboardActions[event.key]) { event.preventDefault(); keyboardActions[event.key](); } });
+  const visibleActions = { 'wb-orbit-left': keyboardActions.ArrowLeft, 'wb-orbit-right': keyboardActions.ArrowRight, 'wb-orbit-up': keyboardActions.ArrowUp, 'wb-orbit-down': keyboardActions.ArrowDown, 'wb-zoom-in': keyboardActions['+'], 'wb-zoom-out': keyboardActions['-'], 'wb-reset': keyboardActions.Home };
+  Object.entries(visibleActions).forEach(([id, action]) => document.getElementById(id)?.addEventListener('click', action));
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { if (wbAnimId) cancelAnimationFrame(wbAnimId); wbAnimId = null; }
+    else if (isInViewport) scheduleWorkbench();
   });
-  const endDrag = () => { isDragging = false; scheduleWorkbench(); };
-  wbStage.addEventListener('pointerup', endDrag);
-  wbStage.addEventListener('pointercancel', endDrag);
+  motionPreferenceQuery.addEventListener('change', scheduleWorkbench);
 
   // Model selector tabs
   document.querySelectorAll('[data-model-study]').forEach(tab => {
@@ -1293,36 +1314,21 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
         document.querySelector('#wb-material').textContent = meta.material;
         document.querySelector('#wb-badge').textContent = meta.badge;
       }
+      if (!sourcePanel.hidden) updateSourcePhoto();
       currentGeom = buildStudyGeometry(activeStudy);
-      targetYaw += 0.35;
-      scheduleWorkbench();
+      const illustrative = activeStudy === 'museum';
+      if (illustrative) showForceVectors = false;
+      document.querySelector('#museum-interpretation-note').hidden = !illustrative;
+      document.querySelector('#museum-source-reference').hidden = !illustrative;
+      const labelButton = document.querySelector('#wb-vectors-toggle');
+      if (labelButton) { labelButton.textContent = `Labels: ${showForceVectors ? 'On' : 'Off'}`; labelButton.setAttribute('aria-pressed', String(showForceVectors)); }
+      setCamera('axon');
+      document.dispatchEvent(new Event('portfolio:study-change'));
     });
   });
 
-  // Camera projection presets (Axon 3D / Plan / Elevation)
-  document.querySelectorAll('[data-cam-view]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-cam-view]').forEach(b => {
-        const active = b === btn;
-        b.classList.toggle('active', active);
-        b.setAttribute('aria-pressed', String(active));
-      });
-      const view = btn.dataset.camView;
-      if (view === 'plan') {
-        targetPitch = 1.42;
-        targetDist = 7.6;
-      } else if (view === 'elevation') {
-        targetPitch = 0.06;
-        targetYaw = 0;
-        targetDist = 7.0;
-      } else {
-        targetPitch = 0.46;
-        targetYaw = 0.72;
-        targetDist = 7.2;
-      }
-      scheduleWorkbench();
-    });
-  });
+  // Presets remain stationary; only explicit input changes the camera.
+  document.querySelectorAll('[data-cam-view]').forEach(button => button.addEventListener('click', () => setCamera(button.dataset.camView)));
 
   // Toggle force vectors & callouts
   const vecBtn = document.querySelector('#wb-vectors-toggle');
@@ -1330,7 +1336,7 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
     vecBtn.addEventListener('click', () => {
       showForceVectors = !showForceVectors;
       vecBtn.setAttribute('aria-pressed', String(showForceVectors));
-      vecBtn.textContent = `Force vectors: ${showForceVectors ? 'On' : 'Off'}`;
+      vecBtn.textContent = `Labels: ${showForceVectors ? 'On' : 'Off'}`;
       scheduleWorkbench();
     });
   }

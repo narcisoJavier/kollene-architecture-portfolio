@@ -1,0 +1,31 @@
+/* The source render and portrait keep independent transform owners. */
+.identity-hero .portrait-composition{position:relative;isolation:isolate;width:100%;max-width:490px;padding-top:8px;overflow:visible}
+.portrait-composition .manor-backdrop-stack{position:absolute;z-index:0;top:18%;left:-5%;width:103%;aspect-ratio:1024/765;pointer-events:none}
+.portrait-composition .manor-backdrop-sheet{position:absolute;inset:-12px 8px 12px -8px;background:#eceee4;border:1px solid #c6cebc;transform:rotate(3deg)}
+.portrait-composition .manor-backdrop{position:absolute;inset:0;width:100%;height:100%;min-height:0;aspect-ratio:1024/765;background:#d4c7b0;border:1px solid #c3c9b9;transform:rotate(-3deg);cursor:default;overflow:hidden}
+.portrait-composition #hero-source-image{position:absolute;inset:0;display:block;width:100%;height:100%;padding:0;object-fit:cover;object-position:50% 50%;opacity:1;animation:none;pointer-events:none}
+.portrait-composition #hero-heliodon{z-index:1;pointer-events:none}
+.portrait-composition #hero-heliodon.ready{opacity:1}
+.portrait-composition .manor-backdrop::after{z-index:2;background:rgba(243,243,232,.07)}
+.portrait-composition .portrait-toggle{position:relative;z-index:2;width:83%;margin:0 0 0 auto;border-radius:0;background:transparent}
+.portrait-composition .portrait-image-stack{aspect-ratio:.82;background:transparent;border:0;border-radius:0;overflow:hidden}
+.portrait-composition .portrait-image-stack::before{content:none}
+.portrait-composition .portrait-toggle .portrait-image-stack>img{padding:0;object-position:50% 100%;object-fit:contain}
+@media(min-width:1101px){
+  .hero.identity-hero{grid-template-columns:minmax(0,1.08fr) minmax(330px,.92fr);gap:clamp(48px,6vw,86px)}
+}
+@media(max-width:900px) and (min-width:761px){
+  .portrait-composition .manor-backdrop-stack{left:-3%;width:103%;top:20%}
+  .portrait-composition .portrait-toggle{width:85%}
+}
+@media(max-width:760px){
+  .identity-hero .portrait-composition{width:94%;max-width:425px;justify-self:center;margin-top:5px}
+  .portrait-composition .manor-backdrop-stack{left:-4%;width:104%;top:17%}
+  .portrait-composition .portrait-toggle{width:82%}
+}
+@media(max-width:600px){
+  .identity-hero .portrait-composition{width:94%;max-width:355px;padding-top:2px}
+  .portrait-composition .manor-backdrop-stack{left:-3%;width:103%;top:18%}
+  .portrait-composition .manor-backdrop-sheet{inset:-8px 5px 8px -5px}
+  .portrait-composition .portrait-image-stack{aspect-ratio:.82}
+}
