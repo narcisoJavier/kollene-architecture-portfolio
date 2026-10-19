@@ -81,9 +81,6 @@
   if (hero) addGroup(hero, [hero.querySelector('.hero-role'), ...hero.querySelectorAll('.reveal-line'), hero.querySelector('.hero-intro'), hero.querySelector('.hero-skills'), hero.querySelector('.hero-actions'), hero.querySelector('.manor-backdrop-stack'), hero.querySelector('#portrait-toggle'), hero.querySelector('.hero-portrait figcaption')], 'spatial', 'hero');
   const logo = document.querySelector('.brand-logo');
   if (logo) addGroup(logo, logo.querySelectorAll('.logo-line'), 'spatial', 'logo');
-  document.querySelector('.wordmark')?.addEventListener('click', () => {
-    groups.filter(group => group.kind === 'hero' || group.kind === 'logo').forEach(play);
-  });
   document.querySelectorAll('.section-heading,.making-heading,.contact-heading,.featured-study-heading').forEach(root => addGroup(root, root.children, 'spatial', 'heading'));
   const aboutTitle = document.querySelector('.about-copy h2');
   if (aboutTitle) addGroup(aboutTitle, [aboutTitle], 'spatial', 'heading');
@@ -156,8 +153,151 @@
   portrait?.addEventListener('click', () => showPortrait(portrait.dataset.alternate !== 'true'));
   showPortrait(false);
 
+  const archIntro = document.querySelector('#arch-intro');
+  const archFrame = document.querySelector('#arch-intro-frame');
+  let supportsDisplayTransition;
+  function canTransitionDisplay() {
+    if (supportsDisplayTransition !== undefined) return supportsDisplayTransition;
+    if (!window.CSS?.supports?.('transition-behavior', 'allow-discrete') || !document.body) return false;
+    const probe = document.createElement('div');
+    probe.style.cssText = 'transition: display 1s allow-discrete !important; display: block;';
+    document.body.appendChild(probe);
+    getComputedStyle(probe).display;
+    probe.style.display = 'none';
+    supportsDisplayTransition = getComputedStyle(probe).display === 'block';
+    probe.remove();
+    return supportsDisplayTransition;
+  }
+
+  async function hideArchIntro() {
+    if (!archIntro || archIntro.hidden) return;
+    if (canTransitionDisplay()) {
+      archIntro.hidden = true;
+    } else {
+      archIntro.setAttribute('data-closing', '');
+    }
+    const anims = archIntro.getAnimations();
+    if (anims.length > 0) {
+      await Promise.race([
+        Promise.allSettled(anims.map(a => a.finished)),
+        new Promise(r => setTimeout(r, 800))
+      ]);
+    }
+    if (archIntro.hasAttribute('data-closing')) {
+      archIntro.removeAttribute('data-closing');
+      archIntro.hidden = true;
+    }
+  }
+
+  function playArchIntro() {
+    if (!archIntro || !archFrame) return;
+    if (preference.matches || !Element.prototype.animate) {
+      archIntro.hidden = true;
+      return;
+    }
+    archIntro.removeAttribute('data-closing');
+    archIntro.hidden = false;
+    archFrame.getAnimations().forEach(a => a.cancel());
+
+    // 1. Trace arch frame and door panel strokes
+    const strokes = archIntro.querySelectorAll('.arch-intro-stroke');
+    strokes.forEach((stroke, idx) => {
+      stroke.getAnimations().forEach(a => a.cancel());
+      const drawAnim = stroke.animate(
+        [{ strokeDashoffset: 900 }, { strokeDashoffset: 0 }],
+        { duration: 760, delay: idx * 55, easing: ease, fill: 'forwards' }
+      );
+      active.add(drawAnim);
+    });
+
+    // Subtle door leaf surface fill appears once strokes settle
+    const fills = archIntro.querySelectorAll('.arch-door-fill');
+    fills.forEach(fill => {
+      fill.getAnimations().forEach(a => a.cancel());
+      const fillAnim = fill.animate(
+        [{ opacity: 0 }, { opacity: 0.72 }],
+        { duration: 420, delay: 420, easing: ease, fill: 'forwards' }
+      );
+      active.add(fillAnim);
+    });
+
+    // 2. Trace each letter of "Kollene Aika Leyson." below the portal
+    const nameTrace = archIntro.querySelector('.arch-name-trace');
+    const nameSvg = archIntro.querySelector('#arch-name-svg');
+    if (nameTrace) {
+      nameTrace.getAnimations().forEach(a => a.cancel());
+      const traceAnim = nameTrace.animate(
+        [
+          { strokeDashoffset: 620, fill: 'rgba(40,56,45,0)' },
+          { strokeDashoffset: 0, fill: 'rgba(40,56,45,0)', offset: 0.68 },
+          { strokeDashoffset: 0, fill: 'rgba(40,56,45,1)' }
+        ],
+        { duration: 1080, delay: 140, easing: ease, fill: 'forwards' }
+      );
+      active.add(traceAnim);
+    }
+
+    // 3. Swing both arched doors open in 3D space
+    const leftDoor = archIntro.querySelector('#arch-door-left');
+    const rightDoor = archIntro.querySelector('#arch-door-right');
+    if (leftDoor && rightDoor) {
+      leftDoor.getAnimations().forEach(a => a.cancel());
+      rightDoor.getAnimations().forEach(a => a.cancel());
+      const openLeft = leftDoor.animate(
+        [
+          { transform: 'rotateY(0deg)' },
+          { transform: 'rotateY(-108deg)' }
+        ],
+        { duration: 820, delay: 860, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'forwards' }
+      );
+      const openRight = rightDoor.animate(
+        [
+          { transform: 'rotateY(0deg)' },
+          { transform: 'rotateY(108deg)' }
+        ],
+        { duration: 820, delay: 860, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'forwards' }
+      );
+      active.add(openLeft);
+      active.add(openRight);
+    }
+
+    // Fade and glide the traced name downward as the camera steps into the open doorway
+    if (nameSvg) {
+      nameSvg.getAnimations().forEach(a => a.cancel());
+      const nameExit = nameSvg.animate(
+        [
+          { opacity: 1, transform: 'translateY(0) scale(1)' },
+          { opacity: 0, transform: 'translateY(22px) scale(1.08)' }
+        ],
+        { duration: 480, delay: 1120, easing: ease, fill: 'forwards' }
+      );
+      active.add(nameExit);
+    }
+
+    // 4. Camera enters through the open portal doors into the hero section
+    const flyThrough = archFrame.animate(
+      [
+        { transform: 'scale(1)', opacity: 1 },
+        { transform: 'scale(1.06)', opacity: 1, offset: 0.56 },
+        { transform: 'scale(16)', opacity: 0 }
+      ],
+      { duration: 1920, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', fill: 'forwards' }
+    );
+    active.add(flyThrough);
+
+    setTimeout(() => {
+      groups.filter(group => group.kind === 'hero' || group.kind === 'logo').forEach(play);
+      hideArchIntro();
+    }, 1340);
+  }
+
+  document.querySelector('.wordmark')?.addEventListener('click', () => {
+    playArchIntro();
+  });
+
   preference.addEventListener('change', () => {
     active.forEach(animation => animation.cancel()); active.clear();
+    if (preference.matches && archIntro) archIntro.hidden = true;
     groups.forEach(group => { group.items.forEach(cancelElement); group.done = false; });
     observe();
   });
@@ -169,4 +309,5 @@
   });
   window.addEventListener('pagehide', () => { active.forEach(animation => animation.cancel()); active.clear(); });
   observe();
+  playArchIntro();
 })();

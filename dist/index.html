@@ -23,6 +23,37 @@
   <script src="app.js" defer></script>
 </head>
 <body>
+  <div class="arch-intro" id="arch-intro" aria-hidden="true">
+    <div class="arch-intro-scene" id="arch-intro-scene">
+      <div class="arch-intro-frame" id="arch-intro-frame">
+        <svg class="arch-intro-svg" viewBox="0 0 280 340" fill="none">
+          <path class="arch-intro-stroke arch-outer" d="M 42 325 L 42 155 A 98 98 0 0 1 238 155 L 238 325 Z" stroke="#344b3c" stroke-width="2.2" vector-effect="non-scaling-stroke"/>
+          <path class="arch-intro-stroke arch-inner" d="M 56 312 L 56 155 A 84 84 0 0 1 224 155 L 224 312 Z" stroke="#727c55" stroke-width="1.2" vector-effect="non-scaling-stroke"/>
+        </svg>
+        <div class="arch-doors">
+          <div class="arch-door arch-door-left" id="arch-door-left">
+            <svg viewBox="56 71 84 241" fill="none">
+              <path class="arch-door-fill" d="M 56 312 L 56 155 A 84 84 0 0 1 140 71 L 140 312 Z" fill="#eceae1"/>
+              <path class="arch-intro-stroke" d="M 56 312 L 56 155 A 84 84 0 0 1 140 71 L 140 312 Z" stroke="#727c55" stroke-width="1.2" vector-effect="non-scaling-stroke"/>
+              <path class="arch-intro-stroke" d="M 70 296 L 70 158 A 70 70 0 0 1 128 90 L 128 296 Z" stroke="#b5bdab" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+              <line class="arch-intro-stroke" x1="133" y1="184" x2="133" y2="210" stroke="#344b3c" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+            </svg>
+          </div>
+          <div class="arch-door arch-door-right" id="arch-door-right">
+            <svg viewBox="140 71 84 241" fill="none">
+              <path class="arch-door-fill" d="M 140 71 A 84 84 0 0 1 224 155 L 224 312 L 140 312 Z" fill="#eceae1"/>
+              <path class="arch-intro-stroke" d="M 140 71 A 84 84 0 0 1 224 155 L 224 312 L 140 312 Z" stroke="#727c55" stroke-width="1.2" vector-effect="non-scaling-stroke"/>
+              <path class="arch-intro-stroke" d="M 152 90 A 70 70 0 0 1 210 158 L 210 296 L 152 296 Z" stroke="#b5bdab" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+              <line class="arch-intro-stroke" x1="147" y1="184" x2="147" y2="210" stroke="#344b3c" stroke-width="1.6" vector-effect="non-scaling-stroke"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <svg class="arch-name-svg" id="arch-name-svg" viewBox="0 0 860 118" fill="none">
+        <text class="arch-name-trace" x="430" y="84" text-anchor="middle">Kollene Aika <tspan class="arch-name-italic">Leyson.</tspan></text>
+      </svg>
+    </div>
+  </div>
   <div class="scroll-ruler" aria-hidden="true"><div class="scroll-ruler-fill" id="scroll-ruler-fill"></div></div>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header wrap">
@@ -268,17 +299,17 @@
                 <button type="button" class="wb-cam-btn" data-cam-view="plan" aria-pressed="false">Plan</button>
                 <button type="button" class="wb-cam-btn" data-cam-view="elevation" aria-pressed="false">Elevation</button>
               </div>
-              <button type="button" class="wb-cam-btn" id="wb-source-toggle" aria-expanded="false" aria-controls="wb-source-panel">Source</button>
+              <button type="button" class="wb-cam-btn active" id="wb-source-toggle" aria-expanded="true" aria-controls="wb-source-panel">Source</button>
             </div>
           </div>
-          <div class="workbench-comparison" id="workbench-comparison">
+          <div class="workbench-comparison source-open" id="workbench-comparison">
             <div class="wb-model-view">
               <span class="wb-comparison-label">3D interpretation</span>
               <canvas id="structural-3d-canvas" tabindex="0" aria-label="Interactive 3D architectural model viewer. Arrow keys orbit, plus and minus zoom, and Home resets the view." aria-describedby="wb-interaction-help"></canvas>
             </div>
-            <figure class="wb-source-panel" id="wb-source-panel" hidden>
-              <div class="wb-source-image-wrap"><img id="wb-source-image" alt="" decoding="async"></div>
-              <figcaption aria-live="polite"><strong id="wb-source-title"></strong><span>Original portfolio photograph · Board 17</span></figcaption>
+            <figure class="wb-source-panel" id="wb-source-panel">
+              <div class="wb-source-image-wrap"><img id="wb-source-image" src="assets/source-tensegrity.webp" width="418" height="337" alt="Original Tensegrity physical model photograph from portfolio Board 17" decoding="async"></div>
+              <figcaption aria-live="polite"><strong id="wb-source-title">Tensegrity</strong><span>Original portfolio photograph · Board 17</span></figcaption>
             </figure>
           </div>
           <div class="workbench-hud-bottom">
@@ -288,7 +319,7 @@
               <button type="button" class="wb-toggle-btn" id="wb-zoom-in" aria-label="Zoom model in">+</button>
               <button type="button" class="wb-toggle-btn" id="wb-reset">Reset</button>
             </div>
-            <details class="wb-model-controls">
+            <details class="wb-model-controls" open>
               <summary>Model controls</summary>
               <div class="wb-secondary-controls">
                 <div class="wb-orbit-group" role="group" aria-label="Orbit the model">
@@ -297,7 +328,7 @@
                   <button type="button" class="wb-toggle-btn" id="wb-orbit-up" aria-label="Orbit model up">↑</button>
                   <button type="button" class="wb-toggle-btn" id="wb-orbit-down" aria-label="Orbit model down">↓</button>
                 </div>
-                <button type="button" class="wb-toggle-btn" id="wb-vectors-toggle" aria-pressed="false">Labels: Off</button>
+                <button type="button" class="wb-toggle-btn" id="wb-vectors-toggle" aria-pressed="true">Labels: On</button>
                 <button type="button" class="wb-board-link" data-board="17">View source board ↗</button>
                 <p class="wb-keyboard-help">Drag or use arrow keys to orbit · + / − to zoom · Home resets</p>
               </div>

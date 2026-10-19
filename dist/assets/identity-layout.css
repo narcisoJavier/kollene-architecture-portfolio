@@ -356,6 +356,196 @@ footer>p,.back-top{font-size:12px;line-height:1.6}
   .board-controls>button{font-size:18px}
 }
 
-@media(prefers-reduced-motion:reduce){
-  html:not([data-motion="on"]) .portrait-toggle .portrait-image-stack>img,html:not([data-motion="on"]) .featured-study .manor-build-layer{transition:none!important;will-change:auto}
+/* Minimalist Arch Portal Camera-Through Loading Intro with Opening Doors & Traced Name */
+.arch-intro{
+  position:fixed;
+  inset:0;
+  z-index:110;
+  display:grid;
+  place-items:center;
+  padding:clamp(16px,4vw,40px);
+  background:var(--paper);
+  pointer-events:none;
+  overflow:hidden;
+  opacity:1;
+  transition:display .6s,opacity .48s var(--ease-out-expo);
+  transition-behavior:allow-discrete;
 }
+@starting-style{
+  .arch-intro{opacity:1}
+}
+.arch-intro:where([hidden],[data-closing]){
+  opacity:0;
+}
+.arch-intro[hidden]{
+  display:none!important;
+}
+.arch-intro-scene{
+  width:100%;
+  max-width:860px;
+  display:grid;
+  justify-items:center;
+  gap:clamp(18px,3vh,30px);
+}
+.arch-intro-frame{
+  position:relative;
+  width:clamp(190px,24vw,300px);
+  max-height:54dvh;
+  aspect-ratio:280 / 340;
+  transform-origin:50% 54%;
+  will-change:transform,opacity;
+}
+.arch-intro-svg{
+  display:block;
+  width:100%;
+  height:100%;
+  overflow:visible;
+}
+.arch-doors{
+  position:absolute;
+  left:20%;
+  top:20.88%;
+  width:60%;
+  height:70.88%;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  perspective:900px;
+  transform-style:preserve-3d;
+}
+.arch-door{
+  width:100%;
+  height:100%;
+  backface-visibility:visible;
+  will-change:transform,opacity;
+}
+.arch-door svg{
+  display:block;
+  width:100%;
+  height:100%;
+  overflow:visible;
+}
+.arch-door-left{
+  transform-origin:0% 50%;
+}
+.arch-door-right{
+  transform-origin:100% 50%;
+}
+.arch-door-fill{
+  opacity:0;
+}
+.arch-intro-stroke{
+  stroke-dasharray:900;
+  stroke-dashoffset:900;
+}
+.arch-name-svg{
+  width:clamp(310px,78vw,780px);
+  height:auto;
+  overflow:visible;
+  will-change:transform,opacity;
+}
+.arch-name-trace{
+  font-family:var(--serif);
+  font-size:80px;
+  letter-spacing:-.035em;
+  stroke:#28382d;
+  stroke-width:1.45px;
+  stroke-dasharray:620;
+  stroke-dashoffset:620;
+  fill:rgba(40,56,45,0);
+}
+.arch-name-italic{
+  font-style:italic;
+  stroke:#727c55;
+}
+
+/* Dynamic Multi-Breakpoint Reflow & Mobile Layout Polish */
+.wrap{
+  width:min(1440px,calc(100% - clamp(32px,7vw,112px)));
+}
+@media(max-width:1024px) and (min-width:621px){
+  .project-grid,.archive-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:clamp(24px,3.5vw,40px) clamp(18px,2.8vw,32px);
+  }
+  .about-grid{
+    grid-template-columns:minmax(220px,.82fr) minmax(0,1.18fr);
+    gap:clamp(28px,5vw,56px);
+  }
+  .making-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:clamp(20px,3vw,32px);
+  }
+}
+@media(max-width:760px){
+  .arch-intro-frame{
+    width:clamp(185px,48vw,250px);
+  }
+  .arch-name-svg{
+    width:min(94vw,560px);
+  }
+  .hero.identity-hero{
+    text-align:left;
+  }
+  .hero-portrait{
+    width:min(100%,380px);
+    margin-inline:auto;
+  }
+  .archive-cta-actions{
+    width:100%;
+    display:flex;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .archive-cta-actions>:is(button,a){
+    flex:1 1 220px;
+    justify-content:space-between;
+  }
+}
+@media(max-width:600px){
+  .arch-intro-scene{
+    gap:16px;
+  }
+  .arch-intro-frame{
+    width:clamp(175px,54vw,225px);
+  }
+  .arch-name-svg{
+    width:min(100%,92vw);
+  }
+  .identity-hero h1{
+    font-size:clamp(46px,13.8vw,66px);
+  }
+  .identity-hero .hero-actions{
+    width:100%;
+    gap:14px 20px;
+  }
+  .identity-hero .hero-actions .button{
+    width:100%;
+    justify-content:space-between;
+  }
+  .filter-bar{
+    margin-right:0;
+    padding-right:0;
+    scroll-padding-inline:16px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .contact-links{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:10px 16px;
+    width:100%;
+  }
+  .contact-links a{
+    min-height:44px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid var(--line);
+    padding-block:6px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  html:not([data-motion="on"]) .portrait-toggle .portrait-image-stack>img,html:not([data-motion="on"]) .featured-study .manor-build-layer,html:not([data-motion="on"]) .arch-intro{transition:none!important;will-change:auto}
+  html:not([data-motion="on"]) .arch-intro{display:none!important}
+}
+html[data-motion="off"] .arch-intro{display:none!important}

@@ -907,7 +907,7 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
   };
 
   let activeStudy = 'tensegrity';
-  let showForceVectors = false;
+  let showForceVectors = true;
   let camYaw = 0.72, camPitch = 0.46, camDist = 7.2;
   let targetYaw = 0.72, targetPitch = 0.46, targetDist = 7.2;
   let isDragging = false, lastX = 0, lastY = 0;
@@ -1207,10 +1207,6 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
     else if (!wbAnimId) wbAnimId = requestAnimationFrame(renderWorkbench);
   }
 
-  resizeWorkbench();
-  renderWorkbench();
-  window.addEventListener('resize', () => { resizeWorkbench(); scheduleWorkbench(); });
-
   const sourceButton = document.querySelector('#wb-source-toggle');
   const sourcePanel = document.querySelector('#wb-source-panel');
   const comparison = document.querySelector('#workbench-comparison');
@@ -1219,9 +1215,14 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
     const image = document.querySelector('#wb-source-image');
     image.width = source.width; image.height = source.height;
     image.alt = `Original ${source.title} physical model photograph from portfolio Board 17`;
-    image.src = `assets/${source.file}`;
+    const nextSrc = `assets/${source.file}`;
+    if (image.getAttribute('src') !== nextSrc) image.src = nextSrc;
     document.querySelector('#wb-source-title').textContent = source.title;
   }
+  if (sourcePanel && !sourcePanel.hidden) updateSourcePhoto();
+  resizeWorkbench();
+  renderWorkbench();
+  window.addEventListener('resize', () => { resizeWorkbench(); scheduleWorkbench(); });
   sourceButton.addEventListener('click', () => {
     const expanded = sourcePanel.hidden;
     if (expanded) updateSourcePhoto();
