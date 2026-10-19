@@ -1,6 +1,9 @@
-# Kollene Aika Leyson — Architecture portfolio
+# Kollene Aika Leyson — Architecture Portfolio
 
-A responsive editorial portfolio built with native HTML, CSS, and JavaScript. No build step or application dependencies.
+- **Live Deployment (Vercel):** [https://kollene-architecture-portfolio.vercel.app](https://kollene-architecture-portfolio.vercel.app)
+- **GitHub Repository:** [https://github.com/narcisoJavier/kollene-architecture-portfolio](https://github.com/narcisoJavier/kollene-architecture-portfolio)
+
+A responsive editorial architecture portfolio built from `abou.pdf` (`SOURCE-NOTES.md` & `PORTFOLIO-PROMPT.md`) with native HTML, CSS, JavaScript, and local Three.js (`dist/assets/three.min.js`).
 
 ## Preview
 
