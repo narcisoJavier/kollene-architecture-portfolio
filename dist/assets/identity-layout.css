@@ -549,3 +549,20 @@ footer>p,.back-top{font-size:12px;line-height:1.6}
   html:not([data-motion="on"]) .arch-intro{display:none!important}
 }
 html[data-motion="off"] .arch-intro{display:none!important}
+
+/* Lenis Smooth Scroll Integration */
+html.lenis,html.lenis body{
+  height:auto;
+}
+.lenis.lenis-smooth{
+  scroll-behavior:auto!important;
+}
+.lenis.lenis-smooth [data-lenis-prevent]{
+  overscroll-behavior:contain;
+}
+.lenis.lenis-stopped{
+  overflow:hidden;
+}
+.lenis.lenis-smooth iframe{
+  pointer-events:none;
+}

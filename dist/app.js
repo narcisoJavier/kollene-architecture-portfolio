@@ -152,6 +152,7 @@ function openProject(key, opener) {
     <div class="detail-footer"><button class="button" data-board="${project.page}">View original presentation board <span aria-hidden="true">↗</span></button><p>Source: original portfolio, page ${project.page} of 20.</p></div>`;
   projectDialog.showModal();
   projectDialog.scrollTop = 0;
+  window.portfolioLenis?.stop();
 }
 
 function setBoardZoom(zoomed) {
@@ -210,6 +211,7 @@ document.addEventListener('click', event => {
     showBoard(boardButton.dataset.board);
     portfolioDialog.showModal();
     portfolioDialog.scrollTop = 0;
+    window.portfolioLenis?.stop();
   }
   const filmstripBtn = event.target.closest('[data-filmstrip-page]');
   if (filmstripBtn) {
@@ -251,6 +253,7 @@ if (boardZoomToggle && boardStage) {
 
 document.querySelectorAll('dialog').forEach(dialog => {
   dialog.addEventListener('close', () => {
+    if (!projectDialog.open && !portfolioDialog.open) window.portfolioLenis?.start();
     if (dialog.dataset.handoff) { delete dialog.dataset.handoff; return; }
     const opener = dialogOpeners.get(dialog);
     if (opener?.isConnected && !opener.closest('dialog:not([open])')) opener.focus();
@@ -340,17 +343,64 @@ document.querySelector('#copy-email').addEventListener('click', async () => {
 });
 
 // ============================================================================
-// SCROLL PROGRESS
+// LENIS SMOOTH SCROLL & SCROLL PROGRESS
 // ============================================================================
-(function initScrollProgress() {
+(function initLenisAndProgress() {
   const ruler = document.querySelector('#scroll-ruler-fill');
   let frame = null;
-  function updateProgress() {
+  function updateProgress(currentScroll) {
     frame = null;
-    if (ruler) ruler.style.transform = `scaleX(${Math.min(1, Math.max(0, scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight)))})`;
+    const y = typeof currentScroll === 'number' ? currentScroll : window.scrollY;
+    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+    if (ruler) ruler.style.transform = `scaleX(${Math.min(1, Math.max(0, y / maxScroll))})`;
   }
-  addEventListener('scroll', () => { if (!frame) frame = requestAnimationFrame(updateProgress); }, { passive: true });
+  window.addEventListener('scroll', () => { if (!frame) frame = requestAnimationFrame(() => updateProgress()); }, { passive: true });
   updateProgress();
+
+  let lenisInstance = null;
+  function setupLenis() {
+    if (typeof window.Lenis !== 'function') return;
+    if (prefersReducedMotion()) {
+      if (lenisInstance) {
+        lenisInstance.destroy();
+        lenisInstance = null;
+        window.portfolioLenis = null;
+      }
+      return;
+    }
+    if (lenisInstance) return;
+
+    lenisInstance = new window.Lenis({
+      duration: 1.15,
+      easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 1,
+      infinite: false,
+      autoRaf: true
+    });
+    lenisInstance.on('scroll', e => updateProgress(e.scroll));
+    window.portfolioLenis = lenisInstance;
+  }
+
+  setupLenis();
+  motionPreferenceQuery.addEventListener('change', setupLenis);
+
+  // In-page smooth scroll anchor links
+  document.addEventListener('click', event => {
+    const anchor = event.target.closest('a[href^="#"]');
+    if (!anchor) return;
+    const href = anchor.getAttribute('href');
+    if (!href || href === '#' || href === '#!') return;
+    const target = document.querySelector(href);
+    if (!target) return;
+    if (lenisInstance && !prefersReducedMotion()) {
+      event.preventDefault();
+      lenisInstance.scrollTo(target, { offset: 0, duration: 1.15 });
+    }
+  });
 })();
 
 // ============================================================================
